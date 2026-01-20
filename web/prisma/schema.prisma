@@ -1,0 +1,213 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  name                  String?
+  email                 String          @unique
+  password              String
+  role                  UserRole        @default(USER)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  currentParishId       Int?
+  id                    Int             @id @default(autoincrement())
+  currentEventType      String?
+  createdEvents         Event[]         @relation("CreatedEvents")
+  updatedEvents         Event[]         @relation("UpdatedEvents")
+  createdFamilies       Family[]        @relation("CreatedFamilies")
+  updatedFamilies       Family[]        @relation("UpdatedFamilies")
+  createdIndividuals    Individual[]    @relation("CreatedIndividuals")
+  updatedIndividuals    Individual[]    @relation("UpdatedIndividuals")
+  createdParticipations Participation[] @relation("CreatedParticipations")
+  updatedParticipations Participation[] @relation("UpdatedParticipations")
+  currentParish         Parish?         @relation("UserCurrentParish", fields: [currentParishId], references: [id])
+}
+
+model Parish {
+  name                     String
+  district                 String?
+  municipality             String?
+  isOriginal               Boolean             @default(false)
+  id                       Int             @id @default(autoincrement())
+  events                   Event[]
+  contextForFamilies       Family[]        @relation("FamilyContextParish")
+  contextForIndividuals    Individual[]    @relation("IndividualContextParish")
+  contextForParticipations Participation[] @relation("ParticipationContextParish")
+  places                   Place[]
+  usersWorkingOn           User[]          @relation("UserCurrentParish")
+}
+
+model Place {
+  name         String
+  isOriginal   Boolean         @default(false)
+  id           Int             @id @default(autoincrement())
+  parishId     Int
+  deathPlaceOf Participation[] @relation("DeathPlace")
+  originOf     Participation[] @relation("Origin")
+  residenceOf  Participation[] @relation("Residence")
+  parish       Parish          @relation(fields: [parishId], references: [id])
+}
+
+model Profession {
+  name           String          @unique
+  isOriginal     Boolean         @default(false)
+  id             Int             @id @default(autoincrement())
+  participations Participation[]
+}
+
+model Title {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  isOriginal     Boolean         @default(false)
+  participations Participation[]
+}
+
+model LegitimacyStatus {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  individuals Individual[]
+}
+
+model Individual {
+  name               String
+  sex                String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  contextParishId    Int?
+  createdById        Int?
+  legitimacyStatusId Int?
+  updatedById        Int?
+  id                 Int               @id @default(autoincrement())
+  familyOfOriginId   Int?
+  familiesAsFather   Family[]          @relation("Husband")
+  familiesAsMother   Family[]          @relation("Wife")
+  contextParish      Parish?           @relation("IndividualContextParish", fields: [contextParishId], references: [id])
+  createdBy          User?             @relation("CreatedIndividuals", fields: [createdById], references: [id])
+  familyOfOrigin     Family?           @relation("Children", fields: [familyOfOriginId], references: [id])
+  legitimacyStatus   LegitimacyStatus? @relation(fields: [legitimacyStatusId], references: [id])
+  updatedBy          User?             @relation("UpdatedIndividuals", fields: [updatedById], references: [id])
+  participations     Participation[]
+}
+
+model Family {
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  contextParishId Int?
+  createdById     Int?
+  updatedById     Int?
+  id              Int          @id @default(autoincrement())
+  fatherId        Int?
+  motherId        Int?
+  marriageEventId Int?         @unique
+  contextParish   Parish?      @relation("FamilyContextParish", fields: [contextParishId], references: [id])
+  createdBy       User?        @relation("CreatedFamilies", fields: [createdById], references: [id])
+  father          Individual?  @relation("Husband", fields: [fatherId], references: [id])
+  marriageEvent   Event?       @relation(fields: [marriageEventId], references: [id])
+  mother          Individual?  @relation("Wife", fields: [motherId], references: [id])
+  updatedBy       User?        @relation("UpdatedFamilies", fields: [updatedById], references: [id])
+  children        Individual[] @relation("Children")
+}
+
+model Event {
+  type           EventType
+  year           Int?
+  month          Int?
+  day            Int?
+  sourceUrl      String?
+  notes          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  id             Int             @id @default(autoincrement())
+  parishId       Int
+  createdById    Int
+  updatedById    Int?
+  createdBy      User            @relation("CreatedEvents", fields: [createdById], references: [id])
+  parish         Parish          @relation(fields: [parishId], references: [id])
+  updatedBy      User?           @relation("UpdatedEvents", fields: [updatedById], references: [id])
+  createdFamily  Family?
+  participations Participation[]
+}
+
+model Participation {
+  role                Role
+  nickname            String?
+  contextParishId     Int?
+  createdAt           DateTime           @default(now())
+  createdById         Int?
+  deathPlaceId        Int?
+  kinshipId           Int?
+  participationRoleId Int?
+  professionOriginal  String?
+  titleId             Int?
+  updatedAt           DateTime           @updatedAt
+  updatedById         Int?
+  lineageIndex        String?
+  id                  Int                @id @default(autoincrement())
+  eventId             Int
+  individualId        Int
+  professionId        Int?
+  residenceId         Int?
+  originId            Int?
+  contextParish       Parish?            @relation("ParticipationContextParish", fields: [contextParishId], references: [id])
+  createdBy           User?              @relation("CreatedParticipations", fields: [createdById], references: [id])
+  deathPlace          Place?             @relation("DeathPlace", fields: [deathPlaceId], references: [id])
+  event               Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  individual          Individual         @relation(fields: [individualId], references: [id])
+  kinship             Kinship?           @relation(fields: [kinshipId], references: [id])
+  origin              Place?             @relation("Origin", fields: [originId], references: [id])
+  participationRole   ParticipationRole? @relation(fields: [participationRoleId], references: [id])
+  profession          Profession?        @relation(fields: [professionId], references: [id])
+  residence           Place?             @relation("Residence", fields: [residenceId], references: [id])
+  title               Title?             @relation(fields: [titleId], references: [id])
+  updatedBy           User?              @relation("UpdatedParticipations", fields: [updatedById], references: [id])
+
+  @@unique([eventId, individualId, role])
+}
+
+model ParticipationRole {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  isOriginal     Boolean         @default(false)
+  participations Participation[]
+}
+
+model Kinship {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  isOriginal     Boolean         @default(false)
+  participations Participation[]
+}
+
+enum EventType {
+  BAPTISM
+  MARRIAGE
+  DEATH
+}
+
+enum Role {
+  SUBJECT
+  FATHER
+  MOTHER
+  GROOM
+  BRIDE
+  GRANDFATHER_PATERNAL
+  GRANDMOTHER_PATERNAL
+  GRANDFATHER_MATERNAL
+  GRANDMOTHER_MATERNAL
+  GODFATHER
+  GODMOTHER
+  WITNESS
+  PRIEST
+  OTHER
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}

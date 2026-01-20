@@ -1,0 +1,987 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Plus, User, FileText, Link as LinkIcon, Save, MapPin, Search, X, ChevronDown, Trash2, Users, ArrowRight } from 'lucide-react';
+
+// --- Types ---
+
+type EventType = 'BAPTISM' | 'MARRIAGE' | 'DEATH';
+
+type PersonData = {
+  id: string; // Internal temporary ID
+  role: string; // The "system" role (e.g. FATHER, MOTHER, OTHER)
+  name: string;
+  nickname: string;
+  professionId: string;
+  professionOriginal: string;
+  origin: string;
+  residence: string;
+  deathPlace: string;
+  titleId: string;
+  
+  sex: 'M' | 'F' | 'D';
+  legitimacyStatusId: string;
+
+  participationRoleId?: string;
+  kinshipId?: string;
+  
+  father?: PersonData;
+  mother?: PersonData;
+};
+
+type EventData = {
+  type: EventType;
+  year: string;
+  month: string;
+  day: string;
+  sourceUrl: string;
+  notes: string;
+  parishId: string;
+}
+
+type Parish = { id: string; name: string; municipality?: string; district?: string; }
+type Place = { id: string; name: string; parishId: string; parish?: Parish; }
+type Title = { id: number; name: string; }
+type Profession = { id: number; name: string; }
+type ParticipationRole = { id: number; name: string; }
+type Kinship = { id: number; name: string; }
+type LegitimacyStatus = { id: number; name: string; }
+
+const createEmptyPerson = (role: string, idSuffix: string): PersonData => ({
+  id: `temp_${Date.now()}_${idSuffix}`,
+  role,
+  name: '',
+  sex: 'D', 
+  legitimacyStatusId: '',
+  nickname: '',
+  professionId: '',
+  professionOriginal: '',
+  origin: '',
+  residence: '',
+  deathPlace: '',
+  titleId: '',
+});
+
+// --- Main Page Component ---
+
+export default function NewRecordPage() {
+  const [eventType, setEventType] = useState<EventType>('BAPTISM');
+  const [eventData, setEventData] = useState<EventData>({
+    type: 'BAPTISM',
+    year: '',
+    month: '',
+    day: '',
+    sourceUrl: '',
+    notes: '',
+    parishId: ''
+  });
+
+  // Metadata State
+  const [parishes, setParishes] = useState<Parish[]>([]);
+  const [titles, setTitles] = useState<Title[]>([]);
+  const [professions, setProfessions] = useState<Profession[]>([]);
+  const [participationRoles, setParticipationRoles] = useState<ParticipationRole[]>([]);
+  const [kinships, setKinships] = useState<Kinship[]>([]);
+  const [legitimacyStatuses, setLegitimacyStatuses] = useState<LegitimacyStatus[]>([]);
+  const [contextParishPlaces, setContextParishPlaces] = useState<Place[]>([]);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Subjects
+  const [primarySubject, setPrimarySubject] = useState<PersonData>(createEmptyPerson('SUBJECT', 'primary'));
+  const [secondarySubject, setSecondarySubject] = useState<PersonData>(createEmptyPerson('SUBJECT', 'secondary'));
+  
+  // Other Participants
+  const [participants, setParticipants] = useState<PersonData[]>([]);
+
+  const router = useRouter();
+
+  // --- Effects ---
+
+  useEffect(() => {
+    setIsLoadingMetadata(true);
+    const fetchData = async () => {
+        try {
+            const [pRes, tRes, profRes, rRes, ctxRes, legRes] = await Promise.all([
+                fetch('/api/parishes'),
+                fetch('/api/titles'),
+                fetch('/api/professions'),
+                fetch('/api/participation-roles'),
+                fetch('/api/users/me/context/current'),
+                fetch('/api/legitimacy-statuses')
+            ]);
+            
+             // Kinship is not currently fetched but used in types. 
+             // If the endpoint exists, fetch it. If not, use empty.
+             const kinRes = await fetch('/api/kinships').catch(() => null);
+
+            const pData = await pRes.json();
+            const ctxData = await ctxRes.json();
+            
+            if (Array.isArray(pData)) {
+                setParishes(pData);
+                if (ctxData && ctxData.parishId) {
+                    handleEventChange('parishId', ctxData.parishId);
+                } else if (pData.length > 0 && !eventData.parishId) {
+                    handleEventChange('parishId', pData[0].id);
+                }
+            }
+
+            const tData = await tRes.json();
+            if(Array.isArray(tData)) setTitles(tData);
+
+            const profData = await profRes.json();
+            if(Array.isArray(profData)) setProfessions(profData);
+
+            const rData = await rRes.json();
+            if(Array.isArray(rData)) setParticipationRoles(rData);
+
+            const lData = await legRes.json();
+            if(Array.isArray(lData)) setLegitimacyStatuses(lData);
+            
+            if(kinRes && kinRes.ok) {
+                const kData = await kinRes.json();
+                if(Array.isArray(kData)) setKinships(kData);
+            }
+
+        } catch (error) {
+            console.error("Error loading metadata:", error);
+        } finally {
+            setIsLoadingMetadata(false);
+        }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+      if (eventData.parishId) {
+          fetch(`/api/places?parishId=${eventData.parishId}`)
+            .then(res => res.json())
+            .then(data => { if (Array.isArray(data)) setContextParishPlaces(data); })
+            .catch(e => console.error("Error fetching places:", e));
+      }
+  }, [eventData.parishId]);
+
+  // --- Handlers ---
+
+  const handleEventChange = (field: keyof EventData, value: string) => {
+    setEventData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updatePerson = (root: 'primary' | 'secondary', updatedPerson: PersonData) => {
+    if (root === 'primary') setPrimarySubject(updatedPerson);
+    else setSecondarySubject(updatedPerson);
+  };
+  
+  const addParticipant = () => {
+      setParticipants(prev => [...prev, createEmptyPerson('OTHER', `part_${prev.length}`)]);
+  };
+
+  const updateParticipant = (index: number, updated: PersonData) => {
+      setParticipants(prev => {
+          const newArr = [...prev];
+          newArr[index] = updated;
+          return newArr;
+      });
+  };
+
+  const removeParticipant = (index: number) => {
+      setParticipants(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const reloadTitles = () => {
+    fetch('/api/titles').then(res => res.json()).then(data => setTitles(data));
+  };
+
+  const handleSave = async () => {
+      if (!eventData.parishId) {
+          alert('Por favor selecione a Paróquia.');
+          return;
+      }
+      if (!primarySubject.name) {
+          alert('O interveniente principal deve ter um nome.');
+          return;
+      }
+
+      setIsSaving(true);
+      
+      const payload = {
+          event: eventData,
+          subjects: {
+            primary: primarySubject,
+            secondary: secondarySubject
+          },
+          participants: participants
+      };
+
+      try {
+          const res = await fetch('/api/records', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+          });
+          
+          if (!res.ok) {
+              const err = await res.json();
+              alert('Erro ao gravar: ' + (err.error || 'Erro desconhecido'));
+              return;
+          }
+          
+          alert('Registo gravado com sucesso!');
+          window.location.reload();
+      } catch (e) {
+          console.error(e);
+          alert('Erro de comunicação.');
+      } finally {
+          setIsSaving(false);
+      }
+  };
+
+  const getPrimaryLabel = () => {
+    switch (eventType) {
+      case 'BAPTISM': return 'Batizando';
+      case 'DEATH': return 'Defunto';
+      case 'MARRIAGE': return 'Noivo';
+    }
+  };
+
+  const getSecondaryLabel = () => 'Noiva';
+
+  return (
+    <div className="min-h-screen bg-base-200 pb-40" data-theme="simplergn">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-40 bg-base-100 border-b border-base-300 shadow-sm">
+        <div className="navbar max-w-[1920px] mx-auto px-4">
+            <div className="navbar-start">
+                <div className="flex items-center gap-4">
+                    <div>
+                        <h1 className="text-xl font-bold">Novo Registo</h1>
+                        <div className="text-xs opacity-60 font-medium uppercase tracking-wide">Adicionar à Base de Dados</div>
+                    </div>
+                    
+                    <div className="divider divider-horizontal"></div>
+                    
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold opacity-50 uppercase tracking-wider mb-1">Paróquia Contexto</span>
+                        <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-primary" />
+                            <div className="w-64">
+                                <SearchableSelect 
+                                    options={parishes.map(p => ({
+                                        id: p.id,
+                                        name: `${p.name} (${p.municipality})`
+                                    }))}
+                                    value={eventData.parishId}
+                                    onChange={(val) => handleEventChange('parishId', val)}
+                                    placeholder="Selecione a Paróquia..."
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="navbar-end">
+                <button 
+                    onClick={handleSave} 
+                    disabled={isSaving}
+                    className="btn btn-primary gap-2"
+                >
+                    {isSaving ? (
+                        <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                        <Save size={18} />
+                    )}
+                    {isSaving ? 'A GRAVAR...' : 'GRAVAR REGISTO'}
+                </button>
+            </div>
+        </div>
+      </header>
+
+      <div className="max-w-[1920px] mx-auto p-8 space-y-8">
+        
+        {/* SECTION 1: EVENT DATA */}
+        <section className="card bg-base-100 shadow-lg">
+            <div className="card-body">
+                <h2 className="card-title text-sm">
+                    <div className="badge badge-primary badge-sm">
+                        <FileText size={12} className="mr-1" />
+                    </div>
+                    Dados do Assento
+                </h2>
+            
+                <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 mt-2">
+                    {/* Event Type */}
+                    <div className="col-span-1 md:col-span-2 xl:col-span-2 form-control">
+                        <label className="label py-0">
+                            <span className="label-text text-xs font-bold opacity-60">Tipo de Evento</span>
+                        </label>
+                        <select 
+                            value={eventType}
+                            onChange={(e) => {
+                                setEventType(e.target.value as EventType);
+                                setEventData(prev => ({ ...prev, type: e.target.value as EventType }));
+                            }}
+                            className="select select-bordered select-sm"
+                        >
+                            <option value="BAPTISM">Batismo</option>
+                            <option value="MARRIAGE">Casamento</option>
+                            <option value="DEATH">Óbito</option>
+                        </select>
+                    </div>
+
+                    {/* Date */}
+                    <div className="col-span-full md:col-span-2 xl:col-span-3">
+                        <label className="label py-0">
+                            <span className="label-text text-xs font-bold opacity-60">Data (Ano / Mês / Dia)</span>
+                        </label>
+                        <div className="flex gap-2">
+                            <input 
+                                type="number" placeholder="Ano"
+                                value={eventData.year} onChange={e => handleEventChange('year', e.target.value)}
+                                className="input input-bordered input-sm w-full"
+                            />
+                            <input 
+                                type="number" placeholder="Mês"
+                                value={eventData.month} onChange={e => handleEventChange('month', e.target.value)}
+                                className="input input-bordered input-sm w-full"
+                            />
+                            <input 
+                                type="number" placeholder="Dia"
+                                value={eventData.day} onChange={e => handleEventChange('day', e.target.value)}
+                                className="input input-bordered input-sm w-full"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Source */}
+                    <div className="col-span-full md:col-span-4 xl:col-span-4 form-control">
+                        <label className="label py-0">
+                            <span className="label-text text-xs font-bold opacity-60">Fonte Digital (Link)</span>
+                        </label>
+                        <div className="input input-bordered input-sm flex items-center gap-2">
+                            <LinkIcon className="w-4 h-4 opacity-50" />
+                            <input 
+                                type="url" 
+                                placeholder="https://arquivo..."
+                                value={eventData.sourceUrl} onChange={e => handleEventChange('sourceUrl', e.target.value)}
+                                className="grow"
+                            />
+                        </div>
+                    </div>
+                    
+                    {/* Notes */}
+                    <div className="col-span-full xl:col-span-3 form-control">
+                        <label className="label py-0">
+                            <span className="label-text text-xs font-bold opacity-60">Observações</span>
+                        </label>
+                        <input 
+                            type="text"
+                            placeholder="Notas adicionais..."
+                            value={eventData.notes} onChange={e => handleEventChange('notes', e.target.value)}
+                            className="input input-bordered input-sm"
+                        />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {/* SECTION 2: GENEALOGY TREE */}
+        <section className="card bg-base-100 shadow-lg">
+            <div className="card-body p-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-base-300">
+                    <h2 className="card-title text-sm">
+                        <div className="badge badge-secondary badge-sm">
+                            <User size={12} className="mr-1" />
+                        </div>
+                        Árvore Genealógica
+                    </h2>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs opacity-60">Use scroll horizontal →</span>
+                        <div className="join">
+                            <button 
+                                onClick={() => {
+                                    const container = document.getElementById('tree-container');
+                                    if (container) container.style.zoom = '0.8';
+                                }}
+                                className="btn btn-xs join-item"
+                            >
+                                80%
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    const container = document.getElementById('tree-container');
+                                    if (container) container.style.zoom = '1';
+                                }}
+                                className="btn btn-xs join-item"
+                            >
+                                100%
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            
+                <div id="tree-container" className="w-full overflow-x-auto overflow-y-hidden p-6 bg-base-200" style={{ zoom: '1' }}>
+                    <div className="flex flex-col gap-8 min-w-max pb-2">
+                        <div className="relative">
+                            {eventType === 'MARRIAGE' && (
+                                <div className="absolute -top-4 left-0 text-[10px] font-extrabold opacity-50 uppercase tracking-wider flex items-center gap-1">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                                    Lado do Noivo
+                                </div>
+                            )}
+                            <PersonNode 
+                                person={primarySubject} 
+                                label={getPrimaryLabel()} 
+                                onChange={(p) => updatePerson('primary', p)}
+                                contextParishPlaces={contextParishPlaces}
+                                parishes={parishes}
+                                titles={titles}
+                                professions={professions}
+                                legitimacyStatuses={legitimacyStatuses}
+                                onTitlesUpdate={reloadTitles}
+                            />
+                        </div>
+
+                        {eventType === 'MARRIAGE' && (
+                            <div className="relative pt-6 border-t border-base-300">
+                                <div className="absolute top-1 left-0 text-[10px] font-extrabold opacity-50 uppercase tracking-wider flex items-center gap-1">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+                                    Lado da Noiva
+                                </div>
+                                <PersonNode 
+                                    person={secondarySubject} 
+                                    label={getSecondaryLabel()} 
+                                    onChange={(p) => updatePerson('secondary', p)}
+                                    contextParishPlaces={contextParishPlaces}
+                                    parishes={parishes}
+                                    titles={titles}
+                                    professions={professions}
+                                    legitimacyStatuses={legitimacyStatuses}
+                                    onTitlesUpdate={reloadTitles}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {/* SECTION 3: OTHER PARTICIPANTS */}
+        <section className="card bg-base-100 shadow-lg">
+            <div className="card-body">
+                <div className="flex items-center justify-between">
+                    <h2 className="card-title text-sm">
+                        <div className="badge badge-accent badge-sm">
+                            <Users size={12} className="mr-1" />
+                        </div>
+                        Outros Intervenientes
+                    </h2>
+                    <button 
+                        onClick={addParticipant}
+                        className="btn btn-sm btn-accent gap-2"
+                    >
+                        <Plus size={14} /> Adicionar
+                    </button>
+                </div>
+            
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 mt-2">
+                    {participants.map((person, idx) => (
+                        <div key={person.id} className="card bg-base-200 shadow">
+                            <div className="card-body p-3">
+                                <div className="flex gap-2 items-center mb-2">
+                                    <div className="flex-1">
+                                        <SearchableSelect 
+                                            options={participationRoles}
+                                            value={person.participationRoleId || ''}
+                                            onChange={(id) => updateParticipant(idx, { ...person, participationRoleId: id })}
+                                            placeholder="FUNÇÃO..."
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <SearchableSelect 
+                                            options={kinships}
+                                            value={person.kinshipId || ''}
+                                            onChange={(id) => updateParticipant(idx, { ...person, kinshipId: id })}
+                                            placeholder="PARENTESCO..."
+                                        />
+                                    </div>
+                                    <button 
+                                        onClick={() => removeParticipant(idx)} 
+                                        className="btn btn-xs btn-ghost btn-circle text-error"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                                <PersonNode 
+                                    person={person} 
+                                    label="" 
+                                    hideHeader={true}
+                                    isCompact={true}
+                                    onChange={(p) => updateParticipant(idx, p)}
+                                    contextParishPlaces={contextParishPlaces}
+                                    parishes={parishes}
+                                    titles={titles}
+                                    professions={professions}
+                                    legitimacyStatuses={legitimacyStatuses}
+                                    onTitlesUpdate={reloadTitles}
+                                />
+                            </div>
+                        </div>
+                    ))}
+
+                    {participants.length === 0 && (
+                        <div className="col-span-full">
+                            <div className="alert">
+                                <Users className="opacity-30" />
+                                <div>
+                                    <h3 className="font-bold text-sm">Nenhum interveniente extra</h3>
+                                    <div className="text-xs opacity-60">Adicione padres, testemunhas ou padrinhos</div>
+                                </div>
+                                <button onClick={addParticipant} className="btn btn-sm btn-primary gap-1">
+                                    <Plus size={14} /> Adicionar
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </section>
+
+      </div>
+    </div>
+  );
+}
+
+// --- Component: Searchable Select (Refined) ---
+
+function SearchableSelect({ 
+    options, value, onChange, placeholder = "Selecione...", onAddNew, className = "", inputClassName = "", isLoading = false
+}: { 
+    options: { id: string | number, name: string }[], value: string | number, onChange: (val: string) => void,
+    placeholder?: string, onAddNew?: () => void, className?: string, inputClassName?: string, isLoading?: boolean
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    
+    // Derived state
+    const safeOptions = Array.isArray(options) ? options : [];
+    const selectedObj = safeOptions.find(o => o.id.toString() === value.toString());
+    const displayValue = isOpen ? search : (selectedObj ? selectedObj.name : '');
+    const filteredOptions = safeOptions.filter(o => o.name && o.name.toLowerCase().includes(search.toLowerCase()));
+
+    return (
+        <div className={`dropdown w-full ${isOpen ? 'dropdown-open' : ''} ${className}`}>
+            <input 
+                className={inputClassName || "input input-bordered input-xs w-full"}
+                placeholder={isLoading ? "..." : placeholder}
+                value={displayValue}
+                onChange={(e) => { setSearch(e.target.value); setIsOpen(true); }}
+                onFocus={() => { setIsOpen(true); setSearch(''); }}
+                onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+                disabled={isLoading}
+            />
+            {isOpen && (
+                <div className="dropdown-content z-50 menu p-1 shadow-lg bg-base-100 rounded-box w-full max-h-60 overflow-auto border border-base-300 mt-1">
+                    {filteredOptions.length > 0 ? (
+                        filteredOptions.map(opt => (
+                            <li key={opt.id}>
+                                <a className="text-xs" onMouseDown={() => { onChange(opt.id.toString()); setIsOpen(false); setSearch(''); }}>
+                                    {opt.name}
+                                </a>
+                            </li>
+                        ))
+                    ) : ( 
+                        <li className="disabled"><a className="text-xs opacity-50">Sem resultados</a></li> 
+                    )}
+                     {onAddNew && (
+                        <>
+                            <div className="divider my-0"></div>
+                            <li>
+                                <a className="text-xs font-bold text-primary" onMouseDown={() => { onAddNew(); setIsOpen(false); }}>
+                                    + Criar Novo
+                                </a>
+                            </li>
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// --- Component: Person Node (The Card) ---
+
+function PersonNode({ 
+    person, label, onChange, contextParishPlaces, parishes, titles, professions, legitimacyStatuses, onTitlesUpdate,
+    hideHeader = false, isCompact = false
+}: { 
+    person: PersonData, label: string, onChange: (p: PersonData) => void,
+    contextParishPlaces: Place[], parishes: Parish[], titles: Title[], professions: Profession[], legitimacyStatuses: LegitimacyStatus[],
+    onTitlesUpdate: () => void, hideHeader?: boolean, isCompact?: boolean
+}) {
+  const handleFieldChange = (field: keyof PersonData, val: string) => onChange({ ...person, [field]: val });
+  
+  const addParents = () => {
+    onChange({ ...person, father: createEmptyPerson('FATHER', `${person.id}_f`), mother: createEmptyPerson('MOTHER', `${person.id}_m`) });
+  };
+
+  // Styles
+  const cardBase = isCompact 
+    ? "card card-compact bg-base-100 shadow w-full"
+    : "card card-compact bg-base-100 shadow-md hover:shadow-lg transition-shadow w-[280px]";
+  const cardBorder = !hideHeader ? 'border border-base-300' : 'border-0 bg-transparent shadow-none w-full';
+
+  return (
+    <div className="flex items-start gap-6">
+      
+      {/* The Main Card */}
+      <div className={`${cardBase} ${cardBorder}`}>
+        <div className="card-body p-3 gap-2">
+            {!hideHeader && (
+                <div className="flex justify-between items-center pb-1 border-b border-base-300">
+                    <div className="badge badge-primary badge-sm gap-1 font-bold uppercase">
+                        {label}
+                    </div>
+                    {!person.father && (
+                        <button onClick={addParents} className="btn btn-ghost btn-xs gap-1">
+                            <Plus size={11} strokeWidth={2.5} /> Pais
+                        </button>
+                    )}
+                </div>
+            )}
+        
+            <div className={isCompact ? "space-y-1.5" : "space-y-2"}>
+                {/* Top Row: Title + Name */}
+                <div className="flex gap-1.5">
+                    <div className="w-[60px] flex-shrink-0">
+                        <TitleSelector value={person.titleId} onChange={(val) => handleFieldChange('titleId', val)} titles={titles} onAdd={onTitlesUpdate} />
+                    </div>
+                    <div className="flex-grow min-w-0">
+                        <input 
+                            type="text" placeholder="Nome Completo" 
+                            value={person.name} onChange={e => handleFieldChange('name', e.target.value)}
+                            className="input input-bordered input-xs w-full font-semibold" 
+                        />
+                {/* Row: Sex + Legitimacy */}
+                <div className="flex gap-1.5">
+                    <div className="btn-group">
+                        {(['M','F','D'] as const).map(s => (
+                            <button 
+                                key={s} 
+                                onClick={() => handleFieldChange('sex', s)}
+                                className={`btn btn-xs ${
+                                    person.sex === s 
+                                    ? (s === 'M' ? 'btn-info btn-active' : s === 'F' ? 'btn-secondary btn-active' : 'btn-neutral btn-active')
+                                    : 'btn-ghost'
+                                }`}
+                            >
+                                {s === 'D' ? '?' : s}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <SearchableSelect 
+                            options={legitimacyStatuses} 
+                            value={person.legitimacyStatusId || ''} 
+                            onChange={(val) => handleFieldChange('legitimacyStatusId', val)} 
+                            placeholder="Filiação..." 
+                        />
+                    </div>
+                </div>
+
+                {/* Nickname */}
+                {/* Profession Block */}
+                <div className="bg-base-200 rounded-lg p-1.5 grid grid-cols-2 gap-1.5">
+                    <div className="form-control">
+                        <label className="label py-0 pb-0.5">
+                            <span className="label-text text-[8px] font-bold opacity-60">Profissão</span>
+                        </label>
+                        <SearchableSelect 
+                            options={professions} 
+                            value={person.professionId} 
+                            onChange={(val) => handleFieldChange('professionId', val)} 
+                            placeholder="..." 
+                        />
+                    </div>
+                    <div className="form-control">
+                        <label className="label py-0 pb-0.5">
+                            <span className="label-text text-[8px] font-bold opacity-60">Original</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            value={person.professionOriginal} 
+                            onChange={e => handleFieldChange('professionOriginal', e.target.value)}
+                            className="input input-bordered input-xs"
+                            placeholder="..."
+                        />
+                    </div>
+                    <div>
+                     <label className="text-[8px] uppercase font-bold text-slate-400 block mb-0.5 tracking-wide">Profissão</label>
+                     <SearchableSelect options={professions} value={person.professionId} onChange={(val) => handleFieldChange('professionId', val)} placeholder="..." 
+                        inputClassName="w-full bg-white border border-slate-200 rounded px-1.5 py-1 text-[10px] outline-none focus:border-blue-400"
+                     />
+                </div>
+                <div>
+                     <label className="text-[8px] uppercase font-bold text-slate-400 block mb-0.5 tracking-wide">Original</label>
+                     <input type="text" value={person.professionOriginal} onChange={e => handleFieldChange('professionOriginal', e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded px-1.5 py-1 text-[10px] outline-none focus:border-blue-400 text-slate-700"
+                        placeholder="..."
+                     />
+                </div>
+            </div>
+
+            {!isCompact && (
+                <div className="space-y-1 pt-0.5">
+                    {[{ label: 'NAT', field: 'origin' }, { label: 'RES', field: 'residence' }, { label: 'ÓBT', field: 'deathPlace' }].map((item) => (
+                        <div key={item.field} className="flex items-centerbase-300"></div>
+             
+             {/* Vertical Bar connecting the two parents */}
+             <div className="absolute top-[20%] bottom-[20%] -left-6 border-l border-base-300"></div>
+
+             {person.father && (
+                 <div className="relative">
+                     {/* Horizontal connector to Father */}
+                    <div className="absolute top-1/2 -left-6 w-6 border-t border-base-300"></div>
+                    <PersonNode 
+                        person={person.father} label="Pai" onChange={(p) => onChange({ ...person, father: p })} 
+                        contextParishPlaces={contextParishPlaces} parishes={parishes} titles={titles} professions={professions} legitimacyStatuses={legitimacyStatuses} onTitlesUpdate={onTitlesUpdate}
+                    />
+                 </div>
+             )}
+             
+             {person.mother && (
+                 <div className="relative">
+                     {/* Horizontal connector to Mother */}
+                    <div className="absolute top-1/2 -left-6 w-6 border-t border-bas
+             <div className="absolute top-1/2 -left-6 w-6 border-t border-slate-300"></div>
+             
+             {/* Vertical Bar connecting the two parents */}
+             <div className="absolute top-[20%] bottom-[20%] -left-6 border-l border-slate-300"></div>
+
+             {person.father && (
+                 <div className="relative">
+                     {/* Horizontal connector to Father */}
+                    <div className="absolute top-1/2 -left-6 w-6 border-t border-slate-300"></div>
+                    <PersonNode 
+                        person={person.father} label="Pai" onChange={(p) => onChange({ ...person, father: p })} 
+                        contextParishPlaces={contextParishPlaces} parishes={parishes} titles={titles} professions={professions} legitimacyStatuses={legitimacyStatuses} onTitlesUpdate={onTitlesUpdate}
+                    />
+                 </div>
+             )}
+             
+             {person.mother && (
+                 <div className="relative">
+                     {/* Horizontal connector to Mother */}
+                    <div className="absolute top-1/2 -left-6 w-6 border-t border-slate-300"></div>
+                    <PersonNode 
+                        person={person.mother} label="Mãe" onChange={(p) => onChange({ ...person, mother: p })}
+                        contextParishPlaces={contextParishPlaces} parishes={parishes} titles={titles} professions={professions} legitimacyStatuses={legitimacyStatuses} onTitlesUpdate={onTitlesUpdate}
+                    />
+                 </div>
+             )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Helpers: Place & Title Selectors ---
+
+function PlaceSelector({ value, onChange, contextPlaces, parishes, placeholder = "..." }: { value: string, onChange: (val: string) => void, contextPlaces: Place[], parishes: Parish[], placeholder?: string }) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    return (
+        <>
+            <select 
+                value={value} 
+                onChange={e => e.target.value === 'SEARCH_OTHER' ? setIsModalOpen(true) : onChange(e.target.value)}
+                className="select select-bordered select-xs w-full"
+            >
+                <option value="">{placeholder}</option>
+                <optgroup label="Paróquia Atual">
+                    {contextPlaces.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </optgroup>
+                <option value="SEARCH_OTHER" className="text-primary font-bold">+ Outro...</option>
+            </select>
+            <PlaceSearchModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSelect={(p) => { onChange(p.id); }} parishes={parishes} initialParishId={contextPlaces[0]?.parishId} />
+        </>
+    );
+}
+
+function TitleSelector({ value, onChange, titles, onAdd }: { value: string, onChange: (val: string) => void, titles: Title[], onAdd: () => void }) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const t = titles.find(x => x.id.toString() === value);
+    return (
+        <>
+            <button 
+                onClick={() => setIsModalOpen(true)} 
+                className="btn btn-xs btn-ghost w-full justify-start normal-case font-bold"
+            >
+                {t ? t.name : 'Tít'}
+            </button>
+            <TitleSearchModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSelect={(newT) => { onAdd(); onChange(newT.id.toString()); }} titles={titles} />
+        </>
+    )
+}
+
+// --- Modals (Simplified for brevity but styled) ---
+
+function PlaceSearchModal({ isOpen, onClose, onSelect, parishes, initialParishId }: { isOpen: boolean, onClose: () => void, onSelect: (place: Place) => void, parishes: Parish[], initialParishId?: string }) {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedParishId, setSelectedParishId] = useState(initialParishId || '');
+    const [results, setResults] = useState<Place[]>([]);
+    const [isCreating, setIsCreating] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchQuery.length >= 2) {
+                const params = new URLSearchParams({ query: searchQuery });
+                if (selectedParishId) params.append('parishId', selectedParishId);
+                fetch(`/api/places?${params}`).then(r => r.json()).then(d => setResults(Array.isArray(d) ? d : []));
+            } else setResults([]);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery, selectedParishId]);
+
+    const handleCreate = async () => {
+        setIsCreating(true);
+        try {
+            const res = await fetch('/api/places', { method: 'POST', body: JSON.stringify({ name: searchQuery, parishId: selectedParishId }) });
+            const data = await res.json();
+            if (data.id) { onSelect(data); onClose(); }
+        } catch(e) { alert('Erro'); } finally { setIsCreating(false); }
+    };
+
+    if (!isOpen) return null;
+    return (
+        <div className="modal modal-open">
+            <div className="modal-box">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-lg">Pesquisar Lugar</h3>
+                    <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
+                        <X size={18} />
+                    </button>
+                </div>
+                
+                <div className="space-y-3">
+                    <select 
+                        className="select select-bordered w-full" 
+                        value={selectedParishId} 
+                        onChange={e => setSelectedParishId(e.target.value)}
+                    >
+                        <option value="">Todas as Paróquias</option>
+                        {parishes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    
+                    <input 
+                        autoFocus 
+                        className="input input-bordered w-full" 
+                        placeholder="Pesquisar lugar..." 
+                        value={searchQuery} 
+                        onChange={e => setSearchQuery(e.target.value)} 
+                    />
+                
+                    <div className="max-h-60 overflow-y-auto">
+                        {results.length > 0 ? (
+                            <div className="menu bg-base-200 rounded-box">
+                                {results.map(p => (
+                                    <li key={p.id}>
+                                        <a onClick={() => { onSelect(p); onClose(); }} className="flex justify-between">
+                                            <span className="font-semibold">{p.name}</span>
+                                            <span className="text-xs opacity-60">{p.parish?.name}</span>
+                                        </a>
+                                    </li>
+                                ))}
+                            </div>
+                        ) : searchQuery.length > 2 && selectedParishId ? (
+                            <button 
+                                onClick={handleCreate} 
+                                disabled={isCreating} 
+                                className="btn btn-primary w-full"
+                            >
+                                {isCreating ? <span className="loading loading-spinner"></span> : `Criar "${searchQuery}"`}
+                            </button>
+                        ) : null}
+                    </div>
+                </div>
+            </div>
+            <div className="modal-backdrop" onClick={onClose}></div>
+        </div>
+    );
+}
+
+function TitleSearchModal({ isOpen, onClose, onSelect, titles = [] }: { isOpen: boolean, onClose: () => void, onSelect: (t: Title) => void, titles: Title[] }) {
+    const [name, setName] = useState('');
+    const [filter, setFilter] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
+
+    // Derived filtered list
+    const filteredTitles = titles.filter(t => t.name.toLowerCase().includes(filter.toLowerCase()));
+
+    const handleCreate = async () => {
+        setIsCreating(true);
+        try {
+            const res = await fetch('/api/titles', { method: 'POST', body: JSON.stringify({ name }) });
+            const data = await res.json();
+            if (data.id) { onSelect(data); onClose(); }
+        } catch(e) { alert('Erro'); } finally { setIsCreating(false); }
+    };
+
+    if (!isOpen) return null;
+    return (
+        <div className="modal modal-open">
+            <div className="modal-box max-w-sm">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-lg">Adicionar Título</h3>
+                    <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
+                        <X size={18} />
+                    </button>
+                </div>
+                 
+                <div className="space-y-3">
+                    <div className="form-control">
+                        <div className="input-group">
+                            <span className="bg-base-300">
+                                <Search size={18} />
+                            </span>
+                            <input 
+                                className="input input-bordered w-full" 
+                                placeholder="Filtrar ou criar novo..." 
+                                value={name} 
+                                onChange={(e) => {
+                                    setName(e.target.value);
+                                    setFilter(e.target.value);
+                                }} 
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+
+                    {filteredTitles.length > 0 && (
+                        <div className="menu bg-base-200 rounded-box max-h-40 overflow-y-auto">
+                            {filteredTitles.map(title => (
+                                <li key={title.id}>
+                                    <a onClick={() => { onSelect(title); onClose(); }} className="text-xs font-medium">
+                                        {title.name}
+                                    </a>
+                                </li>
+                            ))}
+                        </div>
+                    )}
+
+                    {name && !filteredTitles.some(t => t.name.toLowerCase() === name.toLowerCase()) && (
+                        <button 
+                            onClick={handleCreate} 
+                            disabled={isCreating} 
+                            className="btn btn-primary w-full gap-2"
+                        >
+                            {isCreating ? <span className="loading loading-spinner"></span> : <><Plus size={14}/> Criar "{name}"</>}
+                        </button>
+                    )}
+                </div>
+            </div>
+            <div className="modal-backdrop" onClick={onClose}></div>
+        </div>
+    )
+}

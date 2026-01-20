@@ -1,0 +1,572 @@
+﻿id;name
+1;Ator
+3;Administrador do Tabaco
+4;Advogado (a)
+5;Agenciador
+6;Agricultor
+7;Ajudante
+8;Albardeiro
+9;Alcaide
+10;Alfaiate
+11;Alfandegueiro
+12;Alferes 
+13;Almirante
+14;Almocreve
+15;Almoxarife
+16;Alquilador
+17;Ama
+18;Amanuense
+19;Anzoleiro
+20;Apontador de Obras Públicas
+21;Armador
+22;Arqueólogo
+23;Arrieiro
+25;Artista
+26;Assistente
+27;Bacharel
+28;Baleeiro
+29;Barbeiro
+30;Barqueiro
+31;Bibliotecário
+32;Botequineiro
+33;Boticário
+34;Botoeiro
+35;Cabaneiro
+36;Cabeleireiro (a)
+37;Cabo
+38;Cabouqueiro
+39;Caiador
+40;Caixeiro
+41;Calafate
+42;Calceteiro
+43;Caldeireiro
+44;Caminheiro
+45;Canteiro
+46;Cantoneiro
+47;Capador
+48;Capitalista
+49;Capitão
+50;Capitão Navios
+51;Carcereiro
+52;Cardador(a)
+53;Carniceiro
+55;Carpinteiro
+56;Carreiro
+57;Carrejão
+58;Carteiro
+59;Carvoeiro
+61;Cascalheiro
+62;Cauteleiro
+64;Cerieiro
+66;Chapeleiro
+67;Charameleiro
+69;Cirurgião
+70;Cocheiro
+71;Colchoeiro
+72;Comandante Militar
+73;Comendador
+74;Comerciante
+76;Confeiteiro
+77;Conselheiro
+78;Cônsul
+79;Contador
+80;Contínuo
+82;Contratador(a)
+83;Corregedor
+84;Correeiro
+85;Cortador
+86;Costureiro (a)
+87;Coveiro (a)
+89;Cozinheiro (a)
+96;Curtidor
+97;Cutileiro
+98;Delegado do Procurador Régio
+100;Deputado
+101;Descarregador
+102;Desembargador
+103;Despachante da Alfândega
+104;Distribuidor da Correição
+105;Doceiro
+107;Doméstica
+109;Educador Infância
+110;Empregado do Governo Civil
+111;Empregado
+112;Empregado Agrícola
+114;Empregado de Escritório
+115;Empregado de Hotel
+118;Empregado Industrial
+119;Empregado Têxtil
+120;Empregado do Banco
+121;Empregado da Fazenda
+122;Empregado das Obras Públicas
+124;Empregado do Correio
+125;Empregado do Notário
+126;Empregado na Repartição da Fazenda
+127;Empregado na Repartição de obras públicas
+128;Empregado nas Docas
+129;Encadernador
+131;Enfermeiro (a)
+133;Engenheiro (a)
+134;Engomadeira
+135;Engraxador
+136;Ensamblador
+137;Ermitão
+139;Escravo (a)
+140;Escrevente
+141;Escriturário
+142;Escrivão
+143;Escrivão da Administração do Concelho 
+144;Escrivão da Câmara
+145;Escudeiro
+146;Escultor
+147;Espadeiro
+148;Espingardeiro
+149;Estalajadeiro
+150;Estanqueiro do tabaco
+152;Estudante
+154;Fabricante
+155;Farmacêutico
+156;Feitor
+157;Ferrador
+158;Ferreiro
+159;Fiadeiro (a)
+160;Fiscal
+161;Fogueiro
+162;Fogueteiro
+163;Forneiro
+167;Funcionário do Jornal
+168;Funcionário Público
+169;Fundidor
+170;Funileiro
+171;Garfeiro
+172;Gaspeador
+174;Ginasta
+175;Governador Civil
+176;Gravador
+177;Guarda da Alfândega
+178;Guarda da Fazenda Nacional
+180;Guarda Fiscal
+181;Guarda Livros
+182;Guarda Soleiro
+183;Hortelão
+184;Hospitaleiro
+185;Imaginário
+186;Industrial
+187;Informático
+188;Inquiridor
+189;Inspector Trabalho
+190;Jardineiro
+191;Jornaleiro (a)
+193;Jornalista
+194;Juíz
+195;Juíz dos órfãos
+196;Lampianista
+197;Lapidário
+198;Latoeiro
+199;Lavadeira
+200;Lavrador (a)
+201;Livreiro
+202;Lixeiro
+203;Lojista
+204;Major
+205;Mamposteiro dos cativos
+207;Marceneiro
+208;Marchante
+210;Marinheiro
+211;Marítimo
+212;Médico
+213;Meirinho
+214;Mercador
+215;Merceeiro (a)
+217;Mestre de Meninos
+219;Metereologista
+220;Militar
+221;Mesteiral
+222;Moleiro (a)
+224;Mordomo
+225;Músico
+226;Negociante
+227;Notário
+228;Oficial da Repartição da Fazenda
+229;Oficial de diligências
+230;Oleiro
+231;Operador CTT
+232;Operário
+233;Operário(a) industrial
+234;Operário(a) têxtil
+235;Organista
+236;Ourives
+237;Ourives de ouro
+238;Ourives de prata
+239;Padeiro
+241;Padre
+242;Palmilhador
+243;Parteira
+246;Pasteleiro
+247;Patrão
+248;Picheleiro
+249;Pedreiro
+250;Peneireiro
+251;Penteeiro
+253;Pescadeiro
+254;Pescador
+255;Pianista
+256;Piloto
+257;Pintor
+258;Polícia
+259;Porteiro
+260;Pregoeiro
+261;Presbítero Secular
+262;Procurador
+264;Professor(a)
+265;Professor(a) de Instrução Primária 
+267;Proprietário (a)
+268;Rebocador
+269;Recoveiro
+272;Religioso
+273;Relojoeiro
+274;Remador
+275;Retratista
+276;Reverendo
+277;Sacristão
+278;Sangrador
+279;Santeiro
+280;Sapateiro
+281;Sargento
+282;Sargento-Mor
+283;Secretário
+284;Seleiro
+285;Serrador
+286;Serralheiro
+288;Serviçal
+289;Servo
+290;Sindicante dos tabacos
+291;Sineiro
+292;Sirgueiro
+293;Soldado
+294;Solicitador
+295;Solicitador da Fazenda
+296;Sombreireiro
+297;Soqueiro
+298;Surrador
+299;Tabelião
+300;Taberneiro(a)
+301;Tamanqueiro
+302;Tanoeiro
+304;Tecelão/Tecedeira
+306;Tendeiro (a)
+307;Tenente
+308;Tenente Coronel
+309;Tesoureiro
+310;Tintureiro
+311;Tipógrafo
+312;Torneiro
+313;Tozador
+314;Trabalhador(a)
+315;Trabalhador(a) agrícola
+316;Trabalhador(a) independente
+320;Vendeiro (a)
+322;Veterinário
+323;Vigário
+324;Vinhateiro
+325;Violeiro
+326;Zelador
+327;Lavrador Caseiro
+328;Pastor(a)
+329;Prostituto(a)
+336;Ferroviario
+337;Trabalhador(a) na linha férrea
+341;Canastreiro
+344;Agulheiro
+345;Guarda a pé
+347;Tripeiro (a)
+348;Capelão
+349;sem profissão
+350;"Clérigo ""in minoribus"""
+351;Clérigo - Prima Tonsura
+352;Governo Casa
+353;Negociante de Cera
+354;Fuzileiro naval
+355;Sacerdote
+356;Frade / Freira
+357;Tacheiro
+358;Caseiro
+360;Regedor
+362;Mineiro
+365;Negociante de Fazendas Brancas
+372;Clérigo Presbítero
+376;Jurista
+379;Cabo da Guarda Municipal
+381;Mendigo (a)
+382;Polícia Fiscal
+384;Açougueiro
+385;Vivem da Agência
+386;Litógrafo
+389;Cesteiro
+390;Coradeira
+391;Peixeiro(a)
+392;Leiteiro (a)
+394;Picador
+395;Contraste
+396;Biscoiteiro
+397;Administrador das Rendas da Rainha
+399;Cómico gimnástico
+400;Modista
+401;Empreiteiro
+403;Apontador do caminho de ferro
+404;Condutor
+405;Talhante
+406;Entalhador
+407;Gaiteiro
+408;Fidalgo
+411;Mestre de canto
+414;Aspirante
+415;Telegrafista
+416;Adeleiro
+417;Administrador do Concelho
+418;Dona de Casa
+419;Agente
+420;Agente Comercial
+421;Agente de Causas
+422;Aguadeiro
+423;Vendedor ambulante
+424;Arbitrador Judicial
+425;Arcediago
+426;Armeiro
+427;Arquitecto
+428;Arrematante de Estradas
+429;Artilheiro
+431;Assedador (eira)
+432;Azeiteiro
+433;Azulejador
+435;Bainheiro
+436;Bordador (eira)
+437;Brunidor (eira)
+438;Cabreiro
+439;Caçador
+440;Camisoleiro
+441;Campeiro
+442;Cartorário
+444;Cavaleiro
+445;Motorista
+446;Chefe de esquadra da polícia
+449;Chefe de Estação
+450;Dentista
+451;Subdiácono
+454;Comprador de gado
+455;Cónego
+456;Cordoeiro
+457;Corneteiro
+458;Corneteiro-mor
+459;Coronel
+461;Delegado
+462;Provedor régio
+463;Desenhador
+464;Director do banco
+465;Director (a)
+466;Director do Correio
+470;Droguista
+471;Eletricista
+472;Empregado da Câmara Municipal
+473;Empregada doméstica
+474;Empregado fabril
+475;Bombeiro
+476;Empregado no caminho de ferro
+477;Empregado da alfândega
+478;Empregado da Conservatória
+479;Empregado de escola
+480;Enxertador
+481;Escrevente da Fazenda
+482;Escrivão da correição
+483;Escrivão da paz
+484;Escrivão da almotaçaria
+485;Escrivão de direito
+486;Escrivão do geral
+487;Escrivão do reguengo
+488;Escrivão dos órfãos
+489;Escrivão judicial
+490;Esgrimador
+491;Estafeta
+492;Estampador
+493;Estanqueiro-mor
+494;Estucador
+495;Estofador
+496;Executor
+497;Farrapeiro
+498;Fiteiro
+500;Fotógrafo
+501;Furriel
+502;Galinheira
+503;General
+504;Gerente
+505;Guarda
+506;Guarda-fios
+507;Guarda-nocturno
+509;Hoteleiro
+510;Joalheiro
+511;Juiz de Fora
+512;Licenciado
+514;Malheiro
+516;Maquinista
+517;Marmoreiro
+518;Mestre (marítimo)
+520;Mestre de campo
+523;Mestre de música
+524;Mestre-escola
+528;Ministro
+529;Recadista
+530;Moço de fretes
+532;Oficial de administração
+534;Oficial da provedoria
+535;Urdidor (eira)
+536;Prebendeiro
+538;Professor(a) particular
+539;Recebedor
+540;Refinador [de açucar]
+541;Regatão/Regateira
+542;Revendedor (a)
+543;Revisor
+544;Sardinheiro(a)
+546;Sargento-ajudante
+547;Sargento quartel-mestre
+548;Sargento da Guarda Fiscal
+549;Segeiro
+550;Segundo-cabo
+551;Superintendente do Tabaco
+553;Tenente-general
+554;Tenente-médico
+555;Toucinheiro
+556;Trolha
+557;Pagador do Exército
+558;Capitão de Milícias
+559;Doutor(a)
+560;Cultivador
+561;Fiscal de Real de Água
+563;Carreteiro
+564;Mareante
+565;Presbítero
+566;Tenente do castelo
+567;Correio Mor
+570;Caleiro
+572;Piloto da barra
+573;Remendão (sapateiro)
+575;Besteiro
+577;Pobre
+578;Afinador
+580;Auxiliar de Enfermagem
+583;Caixeiro Viajante
+586;Coadjutor
+587;Criado (a)
+588;Criado de Lavoura
+589;Dobador (eira)
+591;Empregado comercial
+592;Empregado da Lavoura
+593;Encarregado Geral
+602;Operário(a) fabril
+603;Pedinte
+615;Reformado(a)
+616;Reitor
+619;Reservatário
+624;Viajante
+627;Lenhador
+628;Cravador
+629;Lavrante
+630;Alugador
+631;Repartidor dos Órfãos
+632;Prateiro
+634;Afinador têxtil
+636;Ajudante têxtil
+637;Cobrador
+638;Farinheiro (a)
+639;Indigente
+640;Militar infantaria
+643;Rendeiro(a) - agrícola
+644;Dourador
+645;Capelista
+646;Saleiro
+648;Despenseiro
+650;Familiar Santo Ofício
+651;Juiz da Alfândega
+652;Vereador
+653;Governador
+654;Corretor
+655;Oficial do Exército
+658;Administrador de Empresas
+659;Analista de Sistemas
+660;Auditor Contabilístico
+662;Brigadeiro
+663;Cadete
+665;Controlador Aéreo
+666;Morgado
+667;Economista
+668;Psicólogo(a)
+672;Fazendeiro
+673;Marechal
+674;Empregado Judicial
+675;Pecuarista
+676;Procurador de Justiça
+677;Diácono
+679;Fâmulo
+680;Conde/Condessa
+681;Duque/Duquesa
+686;Bispo
+687;Administrador
+690;Senador
+691;Barão/Baronesa
+694;Clérigo
+695;Camponês
+696;Aprezenhadeira
+698;Medidor
+699;Miliciano
+701;Queijeiro
+703;Veterano
+704;Vendedor
+707;Administrador de seus bens
+708;Cabo da Guarda
+709;Escrivão da Fazenda
+710;Seminarista
+712;Cabo de Mar
+713;Faroleiro
+714;Monteiro
+715;GNR
+716;Tambor
+717;Servente
+718;Canteiro
+720;Polidor
+723;Empregado Farmácia
+725;Assistente de Vendas
+726;Banheiro (a)
+727;Chaufeur
+728;Cortador de Carnes
+729;Louceira
+730;Assentador Caminhos Ferro
+731;Carregador Ferroviário
+733;Chefe Estação Telegráfica
+734;Comissário Santo Ofício
+735;Chefe Posto Fiscal
+736;Distribuidor Postal
+737;Telheiro
+738;Empregado Fiscalização
+739;Abade (Abadessa)
+740;Mordomo da Igreja
+741;Limador
+743;Esteireiro
+745;Capitão-Mor
+751;Fiscal de Obras
+752;Empregado dos arrematantes do Real d Água
+753;Empregado na produção de energia
+754;Fabricante de tecidos
+756;Guarda-florestal
+761;Fabricante de Sabão
+762;Fabricante de Couros
+770;Seareiro
+2896;Rendeiro(a) - têxtil
+2930;Tenente de Infantaria
+3033;Quadrilheiro
+3050;Pobre de pedir
+3171;Ama de leite
+3252;Tenente de cavalaria
+3273;Tenente Geral de Artilharia
+3330;Ama de abade
+3635;Oficial de Justiça
+4635;Egresso
