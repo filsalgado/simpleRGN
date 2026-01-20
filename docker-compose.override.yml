@@ -1,0 +1,7 @@
+services:
+  web:
+    volumes:
+      - ./web:/app
+      - ./aux_data:/aux_data
+      - /app/node_modules
+      - /app/.next
