@@ -26,7 +26,6 @@ services:
       - db
     volumes:
       - /app/node_modules
-      - /app/.next
 
   pgadmin:
     image: dpage/pgadmin4
