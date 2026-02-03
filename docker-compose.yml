@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - /data/postgresql:/var/lib/postgresql/data
 
   web:
     build:
@@ -38,8 +38,6 @@ services:
     depends_on:
       - db
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - /data/pgadmin:/var/lib/pgadmin
 
-volumes:
-  postgres_data:
-  pgadmin_data:
+volumes: {}
