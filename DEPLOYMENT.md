@@ -41,12 +41,20 @@ ssh debian@vps-082dc5ca.vps.ovh.net
 bash /data/compose/simplergn/scripts/backup.sh
 ```
 
-### ✅ Fazer Backup (Automático - Cron)
+### ✅ Fazer Backup (Automático - Cron) - ⚙️ JÁ CONFIGURADO
+Backup automático agendado para **02:00 (2AM) todos os dias**.
+
+Logs em: `/var/log/simplergn-backup.log`
+
+Para verificar cron:
 ```bash
 ssh debian@vps-082dc5ca.vps.ovh.net
-crontab -e
-# Adicionar:
-0 2 * * * bash /data/compose/simplergn/scripts/backup.sh >> /var/log/simplergn-backup.log 2>&1
+sudo crontab -l
+```
+
+Para modificar ou desabilitar:
+```bash
+sudo crontab -e
 ```
 
 ### ✅ Listar Backups
