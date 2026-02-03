@@ -24,8 +24,6 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
     depends_on:
       - db
-    volumes:
-      - /app/node_modules
 
   pgadmin:
     image: dpage/pgadmin4
