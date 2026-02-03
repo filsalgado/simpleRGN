@@ -22,4 +22,5 @@ RUN npm prune --omit=dev
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+# Use dev mode se o build não funcionar
+CMD ["npm", "run", "dev"]
