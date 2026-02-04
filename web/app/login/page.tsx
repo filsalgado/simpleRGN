@@ -7,10 +7,8 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const router = useRouter();
   
-  // Preencher automaticamente apenas em desenvolvimento
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const [email, setEmail] = useState(isDevelopment ? 'admin@simplergn.com' : '');
-  const [password, setPassword] = useState(isDevelopment ? 'admin' : '');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -63,7 +61,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@simplergn.com"
+                placeholder="email@email.com"
               />
             </div>
             
