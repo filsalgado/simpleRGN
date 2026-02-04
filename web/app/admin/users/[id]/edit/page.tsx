@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-type Parish = { id: number; name: string; };
+type Parish = { id: number; name: string; municipality?: string; district?: string; };
 
 // Searchable Select Component
 function SearchableSelect({ options, value, onChange, placeholder = "Selecionar..." }: {
@@ -245,7 +245,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
                       <div className="mb-3">
                          <label className="form-label fw-semibold">Paróquia Contexto</label>
                          <SearchableSelect
-                            options={parishes}
+                            options={parishes.map(p => ({ id: p.id, name: `${p.name} - ${p.municipality || 'N/A'} - ${p.district || 'N/A'}` }))}
                             value={formData.currentParishId}
                             onChange={(val) => setFormData({...formData, currentParishId: val.toString()})}
                             placeholder="Selecionar paróquia..."

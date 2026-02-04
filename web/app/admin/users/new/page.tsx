@@ -4,7 +4,82 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-type Parish = { id: number; name: string; };
+type Parish = { id: number; name: string; municipality?: string; district?: string; };
+
+// Searchable Select Component
+function SearchableSelect({ options, value, onChange, placeholder = "Selecionar..." }: {
+  options: { id: number; name: string }[];
+  value: string | number;
+  onChange: (value: string | number) => void;
+  placeholder?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  
+  const safeOptions = Array.isArray(options) ? options : [];
+  const filtered = search.trim() === '' 
+    ? safeOptions 
+    : safeOptions.filter(o => o.name.toLowerCase().includes(search.toLowerCase()));
+  
+  const selectedObj = safeOptions.find(o => o.id.toString() === value.toString());
+  const displayValue = isOpen ? search : (selectedObj ? selectedObj.name : '');
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <input
+        type="text"
+        className="form-control"
+        placeholder={placeholder}
+        value={displayValue}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        onBlur={() => setTimeout(() => setIsOpen(false), 100)}
+        autoComplete="off"
+      />
+      {isOpen && filtered.length > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          backgroundColor: '#fff',
+          border: '1px solid #ccc',
+          borderTop: 'none',
+          maxHeight: '200px',
+          overflowY: 'auto',
+          zIndex: 1000,
+          listStyle: 'none',
+          margin: 0,
+          padding: 0
+        }}>
+          {filtered.map(option => (
+            <div
+              key={option.id}
+              onClick={() => {
+                onChange(option.id);
+                setSearch('');
+                setIsOpen(false);
+              }}
+              style={{
+                padding: '8px 12px',
+                cursor: 'pointer',
+                backgroundColor: value === option.id ? '#e9ecef' : '#fff',
+                borderBottom: '1px solid #f0f0f0'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = value === option.id ? '#e9ecef' : '#fff'}
+            >
+              {option.name}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function NewUserPage() {
   const router = useRouter();
@@ -125,18 +200,12 @@ export default function NewUserPage() {
 
                       <div className="mb-3">
                          <label className="form-label fw-semibold">Paróquia Contexto</label>
-                         <select 
-                            className="form-select"
+                         <SearchableSelect
+                            options={parishes.map(p => ({ id: p.id, name: `${p.name} - ${p.municipality || 'N/A'} - ${p.district || 'N/A'}` }))}
                             value={formData.currentParishId}
-                            onChange={e => setFormData({...formData, currentParishId: e.target.value})}
-                         >
-                            <option value="">Selecionar...</option>
-                            {parishes.map(p => (
-                              <option key={p.id} value={p.id}>
-                                {p.name} - {(p as any).municipality || 'N/A'} - {(p as any).district || 'N/A'}
-                              </option>
-                            ))}
-                         </select>
+                            onChange={(val) => setFormData({...formData, currentParishId: val.toString()})}
+                            placeholder="Selecionar paróquia..."
+                         />
                       </div>
 
                       <div className="mb-3">
