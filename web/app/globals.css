@@ -4,6 +4,12 @@ body {
 }
 
 /* Ocultar indicador de desenvolvimento do Next.js */
-#devtools-indicator {
+#devtools-indicator,
+[data-nextjs-toast="true"],
+[data-next-badge-root],
+[data-nextjs-dev-tools-button] {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
