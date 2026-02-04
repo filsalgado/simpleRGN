@@ -39,4 +39,7 @@ services:
     depends_on:
       - db
     volumes:
-      - /data/compose/simplergn/pgadmin_data:/var/lib/pgadmin
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  pgadmin_data:
