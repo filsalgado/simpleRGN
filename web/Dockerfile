@@ -11,10 +11,15 @@ RUN npm install
 # Copiar arquivos da aplicação
 COPY . .
 
-# Desabilitar telemetria e devtools
+# Gerar Prisma Client e fazer build de produção
+RUN npx prisma generate
+RUN npm run build
+
+# Desabilitar telemetria
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
 EXPOSE 3000
 
-# Usar dev mode (funciona melhor que production build)
-CMD ["npm", "run", "dev"]
+# Usar production mode
+CMD ["npm", "run", "start"]
