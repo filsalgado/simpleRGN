@@ -6,13 +6,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-simplergn}
-      PGDATA: /data/pgdata
     ports:
       - "5432:5432"
     volumes:
-      - /data/compose/simplergn/postgres_data:/data/pgdata
-    tmpfs:
-      - /run
+      - postgres_data:/var/lib/postgresql/data
 
   web:
     build:
@@ -42,4 +39,5 @@ services:
       - pgadmin_data:/var/lib/pgadmin
 
 volumes:
+  postgres_data:
   pgadmin_data:
