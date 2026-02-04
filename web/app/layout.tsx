@@ -21,6 +21,20 @@ export default function RootLayout({
     <html lang="pt">
       <head>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <script dangerouslySetInnerHTML={{__html: `
+          if (typeof window !== 'undefined') {
+            const removeDevTools = () => {
+              const indicator = document.getElementById('devtools-indicator');
+              if (indicator) indicator.remove();
+            };
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', removeDevTools);
+            } else {
+              removeDevTools();
+            }
+            setInterval(removeDevTools, 1000);
+          }
+        `}} />
       </head>
       <body className={inter.className}>
         <Providers>
