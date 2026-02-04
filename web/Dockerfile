@@ -11,6 +11,9 @@ RUN npm install
 # Copiar arquivos da aplicação
 COPY . .
 
+# Desabilitar telemetria e devtools
+ENV NEXT_TELEMETRY_DISABLED=1
+
 EXPOSE 3000
 
 # Usar dev mode (funciona melhor que production build)
