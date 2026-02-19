@@ -282,7 +282,46 @@ async function main() {
   }
   console.log(`Seeded ${roleCount} participation roles`)
 
-  // 7. Seed User
+  // 7. Seed MaritalStatuses
+  let maritalStatuses: any[] = []
+
+  const maritalStatusCsvPath = path.join(auxDataPath, 'MaritalStatus.csv')
+  if (fs.existsSync(maritalStatusCsvPath)) {
+    console.log('Loading MaritalStatuses from CSV...')
+    const csvData = parseCsvFile(maritalStatusCsvPath)
+    maritalStatuses = csvData.map((row: any) => ({
+      id: parseInt(row.id?.toString().trim() || '0'),
+      name: row.name?.trim() || '',
+      isOriginal: row.isOriginal === 'true' || row.isOriginal === true,
+    }))
+  } else {
+    maritalStatuses = [
+      { id: 1, name: 'Solteiro(a)', isOriginal: true },
+      { id: 2, name: 'Casado(a)', isOriginal: true },
+      { id: 3, name: 'Viúvo(a)', isOriginal: true },
+      { id: 4, name: 'Separado(a)', isOriginal: true },
+      { id: 5, name: 'Divorciado(a)', isOriginal: true },
+    ]
+  }
+
+  console.log('Seeding MaritalStatuses...')
+  let maritalStatusCount = 0
+  for (const status of maritalStatuses) {
+    try {
+      await prisma.maritalStatus.upsert({
+        where: { id: status.id },
+        update: { name: status.name },
+        create: status,
+      })
+      maritalStatusCount++
+    } catch (e) {
+      // Skip duplicates
+      console.log(`Skipping duplicate marital status: ${status.name}`)
+    }
+  }
+  console.log(`Seeded ${maritalStatusCount} marital statuses`)
+
+  // 8. Seed User
   const password = await hash('admin', 12)
   const user = await prisma.user.upsert({
     where: { email: 'admin@simplergn.com' },

@@ -18,6 +18,11 @@ type PersonData = {
   titleId: string;
   sex: 'M' | 'F' | 'D';
   legitimacyStatusId: string;
+  maritalStatusId: string;
+  birthYear?: string;
+  birthMonth?: string;
+  birthDay?: string;
+  isDeadAtEvent?: boolean;
   participationRoleId?: string;
   kinshipId?: string;
   lineageIndex?: string;
@@ -42,6 +47,7 @@ type Profession = { id: number; name: string; }
 type ParticipationRole = { id: number; name: string; }
 type Kinship = { id: number; name: string; }
 type LegitimacyStatus = { id: number; name: string; }
+type MaritalStatus = { id: number; name: string; }
 
 const createEmptyPerson = (role: string, idSuffix: string): PersonData => ({
   id: `temp_${Date.now()}_${idSuffix}`,
@@ -49,6 +55,11 @@ const createEmptyPerson = (role: string, idSuffix: string): PersonData => ({
   name: '',
   sex: 'D', 
   legitimacyStatusId: '',
+  maritalStatusId: '',
+  birthYear: '',
+  birthMonth: '',
+  birthDay: '',
+  isDeadAtEvent: false,
   nickname: '',
   professionId: '',
   professionOriginal: '',
@@ -71,7 +82,11 @@ function SearchableSelect({ options, value, onChange, placeholder = "Selecionar.
   const [search, setSearch] = useState('');
   
   const safeOptions = Array.isArray(options) ? options : [];
-  const selectedObj = safeOptions.find(o => o.id.toString() === value.toString());
+  const selectedObj = safeOptions.find(o => {
+    const optId = String(o.id).trim();
+    const val = String(value).trim();
+    return optId === val && val !== '';
+  });
   const displayValue = isOpen ? search : (selectedObj ? selectedObj.name : '');
   const filteredOptions = safeOptions.filter(o => o.name && o.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -305,10 +320,13 @@ export default function NewRecordPageBootstrap() {
   const [participationRoles, setParticipationRoles] = useState<ParticipationRole[]>([]);
   const [kinships, setKinships] = useState<Kinship[]>([]);
   const [legitimacyStatuses, setLegitimacyStatuses] = useState<LegitimacyStatus[]>([]);
+  const [maritalStatuses, setMaritalStatuses] = useState<MaritalStatus[]>([]);
   const [contextParishPlaces, setContextParishPlaces] = useState<Place[]>([]);
   const [allPlaces, setAllPlaces] = useState<(Place & { parishId: string })[]>([]);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   
   // Track expanded person for detailed editing
   const [expandedPersonIds, setExpandedPersonIds] = useState<Set<string>>(new Set());
@@ -337,18 +355,40 @@ export default function NewRecordPageBootstrap() {
 
   const router = useRouter();
 
+  // Reset form to initial state
+  const resetForm = () => {
+    setEventType('BAPTISM');
+    setEventData({
+      type: 'BAPTISM',
+      year: '',
+      month: '',
+      day: '',
+      sourceUrl: '',
+      notes: '',
+      parishId: ''
+    });
+    setPrimarySubject(createEmptyPerson('SUBJECT', 'primary'));
+    setSecondarySubject(createEmptyPerson('SUBJECT', 'secondary'));
+    setParticipants([]);
+    setExpandedPersonIds(new Set());
+    setShowPlaceModal(false);
+    setShowTitleModal(false);
+    setModalCallback(null);
+  };
+
   useEffect(() => {
     setIsLoadingMetadata(true);
     const fetchData = async () => {
         try {
-            const [pRes, tRes, profRes, rRes, ctxRes, legRes, placesRes] = await Promise.all([
+            const [pRes, tRes, profRes, rRes, ctxRes, legRes, placesRes, maritalRes] = await Promise.all([
                 fetch('/api/parishes'),
                 fetch('/api/titles'),
                 fetch('/api/professions'),
                 fetch('/api/participation-roles'),
                 fetch('/api/users/me/context/current'),
                 fetch('/api/legitimacy-statuses'),
-                fetch('/api/places')
+                fetch('/api/places'),
+                fetch('/api/marital-statuses')
             ]);
             
             const kinRes = await fetch('/api/kinships').catch(() => null);
@@ -382,6 +422,9 @@ export default function NewRecordPageBootstrap() {
 
             const lData = await legRes.json();
             if(Array.isArray(lData)) setLegitimacyStatuses(lData);
+
+            const mData = await maritalRes.json();
+            if(Array.isArray(mData)) setMaritalStatuses(mData);
             
             if(kinRes && kinRes.ok) {
                 const kData = await kinRes.json();
@@ -458,13 +501,15 @@ export default function NewRecordPageBootstrap() {
     setShowTitleModal(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (action: 'new' | 'edit' = 'edit') => {
       if (!eventData.parishId) {
-          alert('Por favor selecione a Paróquia.');
+          setErrorMessage('Por favor selecione a Paróquia.');
+          setTimeout(() => setErrorMessage(''), 3000);
           return;
       }
       if (!primarySubject.name) {
-          alert('O interveniente principal deve ter um nome.');
+          setErrorMessage('O interveniente principal deve ter um nome.');
+          setTimeout(() => setErrorMessage(''), 3000);
           return;
       }
 
@@ -476,22 +521,26 @@ export default function NewRecordPageBootstrap() {
 
           // Validar ranges
           if (year < 0 || year > 2100) {
-              alert('Ano deve estar entre 0 e 2100.');
+              setErrorMessage('Ano deve estar entre 0 e 2100.');
+              setTimeout(() => setErrorMessage(''), 3000);
               return;
           }
           if (month < 1 || month > 12) {
-              alert('Mês deve estar entre 1 e 12.');
+              setErrorMessage('Mês deve estar entre 1 e 12.');
+              setTimeout(() => setErrorMessage(''), 3000);
               return;
           }
           if (day < 1 || day > 31) {
-              alert('Dia deve estar entre 1 e 31.');
+              setErrorMessage('Dia deve estar entre 1 e 31.');
+              setTimeout(() => setErrorMessage(''), 3000);
               return;
           }
 
           // Validar se é uma data válida usando Date
           const date = new Date(year, month - 1, day);
           if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-              alert(`A data ${day}/${month}/${year} não é válida. Verifique se a data existe (ex: fevereiro tem 28/29 dias).`);
+              setErrorMessage(`A data ${day}/${month}/${year} não é válida. Verifique se a data existe (ex: fevereiro tem 28/29 dias).`);
+              setTimeout(() => setErrorMessage(''), 3000);
               return;
           }
       }
@@ -526,15 +575,31 @@ export default function NewRecordPageBootstrap() {
           
           if (!res.ok) {
               const err = await res.json();
-              alert('Erro ao gravar: ' + (err.error || 'Erro desconhecido'));
+              setErrorMessage('Erro ao gravar: ' + (err.error || 'Erro desconhecido'));
+              setTimeout(() => setErrorMessage(''), 3000);
               return;
           }
           
-          alert('Registo gravado com sucesso!');
-          window.location.reload();
+          const data = await res.json();
+          setSuccessMessage('Registo gravado com sucesso!');
+          setTimeout(() => setSuccessMessage(''), 2000);
+          
+          if (action === 'new') {
+              // Limpar formulário e ir para novo registo após 500ms
+              resetForm();
+              setTimeout(() => {
+                  router.push('/records/new');
+              }, 500);
+          } else {
+              // Redirecionar para a página de edição após 500ms
+              setTimeout(() => {
+                  router.push(`/records/${data.id}/edit`);
+              }, 500);
+          }
       } catch (e) {
           console.error(e);
-          alert('Erro de comunicação.');
+          setErrorMessage('Erro de comunicação.');
+          setTimeout(() => setErrorMessage(''), 3000);
       } finally {
           setIsSaving(false);
       }
@@ -900,11 +965,18 @@ export default function NewRecordPageBootstrap() {
                 />
               </div>
               <button 
-                className="btn btn-primary" 
-                onClick={handleSave}
+                className="btn btn-secondary" 
+                onClick={() => handleSave('edit')}
                 disabled={isSaving}
               >
-                {isSaving ? 'A gravar...' : 'Gravar Registo'}
+                {isSaving ? 'A gravar...' : 'Gravar'}
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => handleSave('new')}
+                disabled={isSaving}
+              >
+                {isSaving ? 'A gravar...' : 'Gravar & Novo'}
               </button>
             </div>
           </div>
@@ -932,15 +1004,15 @@ export default function NewRecordPageBootstrap() {
               </div>
               
               <div className="col-md-2">
-                <label className="form-label">Ano</label>
+                <label className="form-label">Dia</label>
                 <input 
                   type="number" 
                   className="form-control" 
-                  placeholder="Ano"
-                  min="0"
-                  max="2100"
-                  value={eventData.year}
-                  onChange={(e) => handleEventChange('year', e.target.value)}
+                  placeholder="Dia"
+                  min="1"
+                  max="31"
+                  value={eventData.day}
+                  onChange={(e) => handleEventChange('day', e.target.value)}
                 />
               </div>
               
@@ -958,17 +1030,60 @@ export default function NewRecordPageBootstrap() {
               </div>
               
               <div className="col-md-2">
-                <label className="form-label">Dia</label>
+                <label className="form-label">Ano</label>
                 <input 
                   type="number" 
                   className="form-control" 
-                  placeholder="Dia"
-                  min="1"
-                  max="31"
-                  value={eventData.day}
-                  onChange={(e) => handleEventChange('day', e.target.value)}
+                  placeholder="Ano"
+                  min="0"
+                  max="2100"
+                  value={eventData.year}
+                  onChange={(e) => handleEventChange('year', e.target.value)}
                 />
               </div>
+              
+              {eventType === 'BAPTISM' && (
+                <>
+                 <div className="row">
+                  <div className="col-md-2">
+                    <label className="form-label">Dia Nasc.</label>
+                    <input 
+                      type="number" 
+                      className="form-control"
+                      placeholder="Dia..."
+                      min="1"
+                      max="31"
+                      value={primarySubject.birthDay || ''}
+                      onChange={(e) => updatePerson('primary', { ...primarySubject, birthDay: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Mês Nasc.</label>
+                    <input 
+                      type="number" 
+                      className="form-control"
+                      placeholder="Mês..."
+                      min="1"
+                      max="12"
+                      value={primarySubject.birthMonth || ''}
+                      onChange={(e) => updatePerson('primary', { ...primarySubject, birthMonth: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Ano Nasc.</label>
+                    <input 
+                      type="number" 
+                      className="form-control"
+                      placeholder="Ano..."
+                      min="1500"
+                      max="2100"
+                      value={primarySubject.birthYear || ''}
+                      onChange={(e) => updatePerson('primary', { ...primarySubject, birthYear: e.target.value })}
+                    />
+                  </div>
+                  </div>
+                </>
+              )}
               
               <div className="col-md-12">
                 <label className="form-label">Fonte Digital (Link)</label>
@@ -1011,6 +1126,7 @@ export default function NewRecordPageBootstrap() {
               titles={titles}
               professions={professions}
               legitimacyStatuses={legitimacyStatuses}
+              maritalStatuses={maritalStatuses}
               places={allPlaces}
               parishes={parishes}
               contextParishId={eventData.parishId}
@@ -1032,6 +1148,7 @@ export default function NewRecordPageBootstrap() {
                   titles={titles}
                   professions={professions}
                   legitimacyStatuses={legitimacyStatuses}
+                  maritalStatuses={maritalStatuses}
                   places={allPlaces}
                   parishes={parishes}
                   contextParishId={eventData.parishId}
@@ -1098,6 +1215,7 @@ export default function NewRecordPageBootstrap() {
                         titles={titles}
                         professions={professions}
                         legitimacyStatuses={legitimacyStatuses}
+                        maritalStatuses={maritalStatuses}
                         places={allPlaces}
                         parishes={parishes}
                         contextParishId={eventData.parishId}
@@ -1118,12 +1236,20 @@ export default function NewRecordPageBootstrap() {
         <div className="card mb-4">
           <div className="card-body d-flex gap-2 justify-content-end">
             <button 
-              className="btn btn-primary" 
-              onClick={handleSave}
+              className="btn btn-secondary" 
+              onClick={() => handleSave('edit')}
               disabled={isSaving}
               style={{ minWidth: '150px' }}
             >
-              {isSaving ? 'A gravar...' : 'Gravar Registo'}
+              {isSaving ? 'A gravar...' : 'Gravar'}
+            </button>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => handleSave('new')}
+              disabled={isSaving}
+              style={{ minWidth: '150px' }}
+            >
+              {isSaving ? 'A gravar...' : 'Gravar & Novo'}
             </button>
           </div>
         </div>
@@ -1154,6 +1280,55 @@ export default function NewRecordPageBootstrap() {
           }}
         />
       )}
+      
+      {/* Toast de Sucesso */}
+      {successMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#10b981',
+          color: 'white',
+          padding: '12px 20px',
+          borderRadius: '6px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          zIndex: 9999,
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          ✓ {successMessage}
+        </div>
+      )}
+      
+      {/* Toast de Erro */}
+      {errorMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#ef4444',
+          color: 'white',
+          padding: '12px 20px',
+          borderRadius: '6px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          zIndex: 9999,
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          ✕ {errorMessage}
+        </div>
+      )}
+      
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </>
   );
 }
@@ -1203,13 +1378,14 @@ function PersonCardMinimized({ person, label, onClick, generation }: {
 }
 
 // Person Card Full (expanded view)
-function PersonCard({ person, label, onChange, titles, professions, legitimacyStatuses, places, parishes, contextParishId, onAddPlace, onAddTitle, hideParentsButton = false, generation = 0, isSecondary = false, isParticipant = false, expandedPersonIds = new Set(), onToggleExpandedPerson = (id: string) => {}, lineagePath = "1" }: {
+function PersonCard({ person, label, onChange, titles, professions, legitimacyStatuses, maritalStatuses, places, parishes, contextParishId, onAddPlace, onAddTitle, hideParentsButton = false, generation = 0, isSecondary = false, isParticipant = false, expandedPersonIds = new Set(), onToggleExpandedPerson = (id: string) => {}, lineagePath = "1" }: {
   person: PersonData;
   label: string;
   onChange: (p: PersonData) => void;
   titles: Title[];
   professions: Profession[];
   legitimacyStatuses: LegitimacyStatus[];
+  maritalStatuses: MaritalStatus[];
   places: Place[];
   parishes: Parish[];
   contextParishId: string;
@@ -1329,7 +1505,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
             </div>
           </div>
           
-          <div className="col-md-6">
+          <div className="col-md-4">
             <label className="form-label">Filiação</label>
             <SearchableSelect
               options={legitimacyStatuses.map(l => ({ id: l.id, name: l.name }))}
@@ -1339,7 +1515,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
             />
           </div>
           
-          <div className="col-md-6">
+          <div className="col-md-4">
             <label className="form-label">Alcunha</label>
             <input 
               type="text" 
@@ -1347,6 +1523,16 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
               placeholder="Alcunha ou apelido..."
               value={person.nickname}
               onChange={(e) => handleChange('nickname', e.target.value)}
+            />
+          </div>
+          
+          <div className="col-md-4">
+            <label className="form-label">Estado Civil</label>
+            <SearchableSelect
+              options={maritalStatuses.map(ms => ({ id: ms.id, name: ms.name }))}
+              value={person.maritalStatusId}
+              onChange={(val) => handleChange('maritalStatusId', val)}
+              placeholder="Selecionar..."
             />
           </div>
           
@@ -1419,6 +1605,20 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
             {person.father && (
               <div className="person-lineage person-lineage-paternal">
                 <div className="person-lineage-label">👨 Linha Paterna</div>
+                <div className="mb-3">
+                  <div className="form-check">
+                    <input 
+                      className="form-check-input" 
+                      type="checkbox" 
+                      id={`father_dead_${person.id}`}
+                      checked={person.father.isDeadAtEvent || false}
+                      onChange={(e) => onChange({ ...person, father: { ...person.father!, isDeadAtEvent: e.target.checked } })}
+                    />
+                    <label className="form-check-label" htmlFor={`father_dead_${person.id}`}>
+                      Falecido à data do evento
+                    </label>
+                  </div>
+                </div>
                 <PersonCard
                   person={person.father}
                   label={`Pai ${person.name ? `de ${person.name}` : ''}`}
@@ -1426,6 +1626,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
                   titles={titles}
                   professions={professions}
                   legitimacyStatuses={legitimacyStatuses}
+                  maritalStatuses={maritalStatuses}
                   places={places}
                   parishes={parishes}
                   contextParishId={contextParishId}
@@ -1441,6 +1642,20 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
             {person.mother && (
               <div className="person-lineage person-lineage-maternal">
                 <div className="person-lineage-label">👩 Linha Materna</div>
+                <div className="mb-3">
+                  <div className="form-check">
+                    <input 
+                      className="form-check-input" 
+                      type="checkbox" 
+                      id={`mother_dead_${person.id}`}
+                      checked={person.mother.isDeadAtEvent || false}
+                      onChange={(e) => onChange({ ...person, mother: { ...person.mother!, isDeadAtEvent: e.target.checked } })}
+                    />
+                    <label className="form-check-label" htmlFor={`mother_dead_${person.id}`}>
+                      Falecido à data do evento
+                    </label>
+                  </div>
+                </div>
                 <PersonCard
                   person={person.mother}
                   label={`Mãe ${person.name ? `de ${person.name}` : ''}`}
@@ -1448,6 +1663,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
                   titles={titles}
                   professions={professions}
                   legitimacyStatuses={legitimacyStatuses}
+                  maritalStatuses={maritalStatuses}
                   places={places}
                   parishes={parishes}
                   contextParishId={contextParishId}

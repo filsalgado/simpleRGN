@@ -77,6 +77,9 @@ model LegitimacyStatus {
 model Individual {
   name               String
   sex                String?
+  birthYear          Int?
+  birthMonth         Int?
+  birthDay           Int?
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   contextParishId    Int?
@@ -148,6 +151,8 @@ model Participation {
   updatedAt           DateTime           @updatedAt
   updatedById         Int?
   lineageIndex        String?
+  maritalStatusId     Int?
+  isDeadAtEvent       Boolean            @default(false)
   id                  Int                @id @default(autoincrement())
   eventId             Int
   individualId        Int
@@ -160,6 +165,7 @@ model Participation {
   event               Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
   individual          Individual         @relation(fields: [individualId], references: [id])
   kinship             Kinship?           @relation(fields: [kinshipId], references: [id])
+  maritalStatus       MaritalStatus?     @relation(fields: [maritalStatusId], references: [id])
   origin              Place?             @relation("Origin", fields: [originId], references: [id])
   participationRole   ParticipationRole? @relation(fields: [participationRoleId], references: [id])
   profession          Profession?        @relation(fields: [professionId], references: [id])
@@ -178,6 +184,13 @@ model ParticipationRole {
 }
 
 model Kinship {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  isOriginal     Boolean         @default(false)
+  participations Participation[]
+}
+
+model MaritalStatus {
   id             Int             @id @default(autoincrement())
   name           String          @unique
   isOriginal     Boolean         @default(false)

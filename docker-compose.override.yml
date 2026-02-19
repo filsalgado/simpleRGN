@@ -1,5 +1,6 @@
 services:
   web:
+    command: sh -c "npx prisma generate && npm run dev"
     volumes:
       - ./web:/app
       - ./aux_data:/aux_data

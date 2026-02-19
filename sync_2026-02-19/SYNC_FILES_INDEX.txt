@@ -1,0 +1,245 @@
+═══════════════════════════════════════════════════════════════════════════════
+                  SINCRONIZAÇÃO PARA PRODUÇÃO - ÍNDICE DE FICHEIROS
+═══════════════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTAÇÃO (LEIA POR ESTA ORDEM)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. 📄 README_SYNCHRONIZATION.md (Este ficheiro!)
+   ├─ Índice completo
+   ├─ Explicação de cada documento
+   ├─ Timeline do processo
+   └─ Checklist final
+
+2. ⭐ QUICK_START_SYNC.md (COMECE AQUI - 5 minutos)
+   ├─ Guia rápido
+   ├─ 3 opções principais
+   ├─ Como usar os scripts
+   ├─ Comandos rápidos
+   └─ Troubleshooting comum
+
+3. 📖 SYNC_TO_PRODUCTION.md (Documento Principal - 20 minutos)
+   ├─ Resumo das alterações
+   ├─ 4 fases de sincronização
+   ├─ Fase 1: GitHub
+   ├─ Fase 2: Backup
+   ├─ Fase 3: Migrations
+   ├─ Fase 4: Validação
+   ├─ Rollback procedures
+   └─ Notas importantes
+
+4. 🔧 TECHNICAL_MIGRATIONS.md (Para Técnicos - 15 minutos)
+   ├─ SQL completo de cada migration
+   ├─ Detalhes antes/depois do schema
+   ├─ Queries de validação
+   ├─ Foreign keys e índices
+   ├─ Performance estimates
+   └─ Reversão manual de migrations
+
+5. 📅 SYNCHRONIZATION_TIMELINE.md (Planeamento - 15 minutos)
+   ├─ Timeline recomendada
+   ├─ Checklist pré-sincronização
+   ├─ Checklist pós-sincronização
+   ├─ Estratégia de backups
+   ├─ Plano de comunicação
+   ├─ Riscos e mitigações
+   ├─ Monitoramento pós-sync
+   └─ Best practices
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🛠️ SCRIPTS (EXECUTE POR ESTA ORDEM)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. 💾 backup_db.sh (Backup da BD - 5 minutos)
+   ├─ Executa: ./backup_db.sh
+   ├─ Cria ficheiro em: ./backups/backup_simplergn_YYYYMMDD_HHMMSS.sql
+   ├─ Guarde este ficheiro num local seguro!
+   ├─ Exemplos: Google Drive, Dropbox, OneDrive
+   └─ Tempo: 1-5 minutos
+
+2. 🚀 sync_production.sh (SINCRONIZAÇÃO AUTOMÁTICA - 15 minutos)
+   ├─ Executa: ./sync_production.sh
+   ├─ O que faz:
+   │  ├─ Faz backup automático
+   │  ├─ Atualiza código do GitHub
+   │  ├─ Reinicia containers
+   │  ├─ Aplica migrations
+   │  └─ Valida automaticamente
+   ├─ Resultado: Sistema online com novos campos
+   └─ Tempo: 10-15 minutos
+
+3. ✓ validate_migration.sh (VALIDAÇÃO - 2 minutos)
+   ├─ Executa: ./validate_migration.sh
+   ├─ Verifica:
+   │  ├─ Tabelas foram criadas
+   │  ├─ Colunas foram adicionadas
+   │  ├─ Dados preservados
+   │  └─ Foreign keys ok
+   └─ Usar APÓS sync_production.sh
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📝 COMO USAR - 3 CENÁRIOS
+═══════════════════════════════════════════════════════════════════════════════
+
+CENÁRIO 1: SOU NOVO EM ISTO (Recomendado)
+─────────────────────────────────────────
+1. Ler este ficheiro (5 min)
+2. Ler QUICK_START_SYNC.md (5 min)
+3. Ler SYNC_TO_PRODUCTION.md (20 min)
+4. Executar ./sync_production.sh (15 min)
+5. Total: ~45 minutos
+
+Comandos:
+────────
+cd /home/filipe/projs/simpleRGN
+cat QUICK_START_SYNC.md
+cat SYNC_TO_PRODUCTION.md
+./backup_db.sh
+./sync_production.sh
+./validate_migration.sh
+
+
+CENÁRIO 2: SOU TÉCNICO (Automático)
+────────────────────────────────────
+1. Ler TECHNICAL_MIGRATIONS.md (20 min)
+2. Ler SYNCHRONIZATION_TIMELINE.md (15 min)
+3. Executar ./sync_production.sh (15 min)
+4. Total: ~50 minutos
+
+Comandos:
+────────
+cd /home/filipe/projs/simpleRGN
+cat TECHNICAL_MIGRATIONS.md
+./sync_production.sh
+./validate_migration.sh
+
+
+CENÁRIO 3: QUERO FAZER JÁ (Super Rápido)
+─────────────────────────────────────────
+1. Ler QUICK_START_SYNC.md (5 min)
+2. Executar scripts (20 min)
+3. Total: ~25 minutos
+
+Comandos:
+────────
+cd /home/filipe/projs/simpleRGN
+cat QUICK_START_SYNC.md
+./backup_db.sh
+./sync_production.sh
+./validate_migration.sh
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📂 ESTRUTURA DE FICHEIROS
+═══════════════════════════════════════════════════════════════════════════════
+
+/home/filipe/projs/simpleRGN/
+│
+├── 📄 DOCUMENTAÇÃO
+│   ├── README_SYNCHRONIZATION.md          ← Comece aqui (Este ficheiro)
+│   ├── QUICK_START_SYNC.md                ← Guia rápido
+│   ├── SYNC_TO_PRODUCTION.md              ← Documentação completa
+│   ├── TECHNICAL_MIGRATIONS.md            ← Detalhes técnicos
+│   ├── SYNCHRONIZATION_TIMELINE.md        ← Planeamento
+│   └── SYNC_FILES_INDEX.txt               ← Este ficheiro
+│
+├── 🛠️ SCRIPTS EXECUTÁVEIS
+│   ├── backup_db.sh                       ← Fazer backup
+│   ├── sync_production.sh                 ← Sincronização (PRINCIPAL)
+│   └── validate_migration.sh              ← Validar resultado
+│
+├── 💾 BACKUPS (Criado automaticamente)
+│   └── backups/
+│       ├── backup_simplergn_20260219_145800.sql
+│       ├── backup_before_sync_20260219_150000.sql
+│       └── ...
+│
+└── 📦 CÓDIGO-FONTE
+    ├── web/
+    ├── prisma/
+    │   └── migrations/
+    │       ├── 20260218213437_add_marital_status/
+    │       ├── 20260218232511_add_birth_date/
+    │       └── 20260218233546_add_is_dead_at_event/
+    └── ...
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ CHECKLIST RÁPIDO
+═══════════════════════════════════════════════════════════════════════════════
+
+ANTES DE SINCRONIZAR:
+□ A data/hora está marcada
+□ Avisei os utilizadores
+□ Tenho acesso ao terminal do Portainer
+□ Li pelo menos QUICK_START_SYNC.md
+□ Git está limpo (git status)
+
+PREPARAÇÃO:
+□ Fiz backup: ./backup_db.sh
+□ Guardei backup em Google Drive / Dropbox
+□ Testei ./sync_production.sh em DESENVOLVIMENTO (opcional)
+
+SINCRONIZAÇÃO:
+□ Avisei utilizadores que sistema vai offline
+□ Executei: ./sync_production.sh
+□ Anotei a hora de início e fim
+□ Executei: ./validate_migration.sh
+□ Testei manualmente (login, criar registo, novos campos)
+
+PÓS-SINCRONIZAÇÃO:
+□ Comunicar volta ao normal
+□ Monitorar logs: docker compose logs web
+□ Recolher feedback dos utilizadores
+□ Documentar data/hora/duração
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🆘 SE ALGO CORRER MAL
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Ler MIGRATION_RECOVERY.md (se existir) ou SYNC_TO_PRODUCTION.md
+2. Verificar logs: docker compose logs web
+3. Restaurar backup:
+   docker compose down
+   docker exec simplergn-db-1 psql -U postgres -d simplergn < ./backups/backup_file.sql
+   docker compose up -d
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📊 RESUMO DO QUE MUDA
+═══════════════════════════════════════════════════════════════════════════════
+
+BASE DE DADOS:
+✓ Nova tabela: MaritalStatus (Estado Civil)
+✓ Novos campos em Individual: birthYear, birthMonth, birthDay
+✓ Novos campos em Participation: maritalStatusId, isDeadAtEvent
+✓ Todos os registos antigos mantêm-se intactos
+
+APLICAÇÃO:
+✓ Novo layout responsivo
+✓ Botões "Novo Registo" e "Listar Registos" na navbar
+✓ Dois botões de gravação: "Gravar" e "Gravar & Novo"
+✓ Toast notifications ao invés de alerts
+✓ Novos campos nos formulários
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📞 PRÓXIMOS PASSOS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Ler QUICK_START_SYNC.md (5 minutos)
+2. Escolher um dos 3 cenários acima
+3. Seguir as instruções passo a passo
+4. Executar ./sync_production.sh
+5. Pronto! Sistema sincronizado
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Criado: 19 de Fevereiro de 2026
+Versão: 2.0
+Status: Pronto para produção ✅
+
+═══════════════════════════════════════════════════════════════════════════════

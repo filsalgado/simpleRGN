@@ -163,6 +163,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                             name: person.name,
                             sex: person.sex || 'U',
                             legitimacyStatusId: person.legitimacyStatusId ? parseInt(person.legitimacyStatusId) : null,
+                            birthYear: person.birthYear ? parseInt(person.birthYear) : null,
+                            birthMonth: person.birthMonth ? parseInt(person.birthMonth) : null,
+                            birthDay: person.birthDay ? parseInt(person.birthDay) : null,
                             createdById: user.id,
                             updatedById: user.id,
                             contextParishId: user.currentParishId
@@ -187,8 +190,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                                 originId: person.origin ? parseInt(person.origin) : null,
                                 residenceId: person.residence ? parseInt(person.residence) : null,
                                 deathPlaceId: person.deathPlace ? parseInt(person.deathPlace) : null,
+                                isDeadAtEvent: person.isDeadAtEvent || false,
                                 participationRoleId: person.participationRoleId ? parseInt(person.participationRoleId) : null,
                                 kinshipId: person.kinshipId ? parseInt(person.kinshipId) : null,
+                                maritalStatusId: person.maritalStatusId ? parseInt(person.maritalStatusId) : null,
                                 createdById: user.id,
                                 updatedById: user.id,
                                 contextParishId: user.currentParishId
@@ -209,6 +214,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                             name: person.name,
                             sex: person.sex || 'U',
                             legitimacyStatusId: person.legitimacyStatusId ? parseInt(person.legitimacyStatusId) : null,
+                            birthYear: person.birthYear ? parseInt(person.birthYear) : null,
+                            birthMonth: person.birthMonth ? parseInt(person.birthMonth) : null,
+                            birthDay: person.birthDay ? parseInt(person.birthDay) : null,
                             updatedById: user.id
                         }
                     });
@@ -234,8 +242,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                                 originId: person.origin ? parseInt(person.origin) : null,
                                 residenceId: person.residence ? parseInt(person.residence) : null,
                                 deathPlaceId: person.deathPlace ? parseInt(person.deathPlace) : null,
+                                isDeadAtEvent: person.isDeadAtEvent || false,
                                 participationRoleId: person.participationRoleId ? parseInt(person.participationRoleId) : null,
                                 kinshipId: person.kinshipId ? parseInt(person.kinshipId) : null,
+                                maritalStatusId: person.maritalStatusId ? parseInt(person.maritalStatusId) : null,
                                 updatedById: user.id
                             }
                         });
@@ -254,8 +264,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                                 originId: person.origin ? parseInt(person.origin) : null,
                                 residenceId: person.residence ? parseInt(person.residence) : null,
                                 deathPlaceId: person.deathPlace ? parseInt(person.deathPlace) : null,
+                                isDeadAtEvent: person.isDeadAtEvent || false,
                                 participationRoleId: person.participationRoleId ? parseInt(person.participationRoleId) : null,
                                 kinshipId: person.kinshipId ? parseInt(person.kinshipId) : null,
+                                maritalStatusId: person.maritalStatusId ? parseInt(person.maritalStatusId) : null,
                                 createdById: user.id,
                                 updatedById: user.id,
                                 contextParishId: user.currentParishId

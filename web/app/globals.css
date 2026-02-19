@@ -3,6 +3,16 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+
+.form-label {
+    color: #000000 !important;
+    
+    font-size: 13px !important;
+   
+}
+
+
+
 /* Ocultar indicador de desenvolvimento do Next.js */
 #devtools-indicator,
 [data-nextjs-toast="true"],

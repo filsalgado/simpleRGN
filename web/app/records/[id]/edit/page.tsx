@@ -19,6 +19,11 @@ type PersonData = {
   titleId: string;
   sex: 'M' | 'F' | 'D';
   legitimacyStatusId: string;
+  maritalStatusId: string;
+  birthYear?: string;
+  birthMonth?: string;
+  birthDay?: string;
+  isDeadAtEvent?: boolean;
   participationRoleId?: string;
   kinshipId?: string;
   lineageIndex?: string;
@@ -43,6 +48,7 @@ type Profession = { id: number; name: string; }
 type ParticipationRole = { id: number; name: string; }
 type Kinship = { id: number; name: string; }
 type LegitimacyStatus = { id: number; name: string; }
+type MaritalStatus = { id: number; name: string; }
 
 const createEmptyPerson = (role: string, idSuffix: string): PersonData => ({
   id: `temp_${Date.now()}_${idSuffix}`,
@@ -50,6 +56,10 @@ const createEmptyPerson = (role: string, idSuffix: string): PersonData => ({
   name: '',
   sex: 'D', 
   legitimacyStatusId: '',
+  maritalStatusId: '',
+  birthYear: '',
+  birthMonth: '',
+  birthDay: '',
   nickname: '',
   professionId: '',
   professionOriginal: '',
@@ -72,7 +82,11 @@ function SearchableSelect({ options, value, onChange, placeholder = "Selecionar.
   const [search, setSearch] = useState('');
   
   const safeOptions = Array.isArray(options) ? options : [];
-  const selectedObj = safeOptions.find(o => o.id.toString() === value.toString());
+  const selectedObj = safeOptions.find(o => {
+    const optId = String(o.id).trim();
+    const val = String(value).trim();
+    return optId === val && val !== '';
+  });
   const displayValue = isOpen ? search : (selectedObj ? selectedObj.name : '');
   const filteredOptions = safeOptions.filter(o => o.name && o.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -308,11 +322,14 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
   const [participationRoles, setParticipationRoles] = useState<ParticipationRole[]>([]);
   const [kinships, setKinships] = useState<Kinship[]>([]);
   const [legitimacyStatuses, setLegitimacyStatuses] = useState<LegitimacyStatus[]>([]);
+  const [maritalStatuses, setMaritalStatuses] = useState<MaritalStatus[]>([]);
   const [contextParishPlaces, setContextParishPlaces] = useState<Place[]>([]);
   const [allPlaces, setAllPlaces] = useState<(Place & { parishId: string })[]>([]);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   
   // Modal states
   const [showPlaceModal, setShowPlaceModal] = useState(false);
@@ -395,6 +412,11 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
                 professionId: fatherParticipation.professionId?.toString() || '',
                 professionOriginal: fatherParticipation.professionOriginal || '',
                 legitimacyStatusId: fatherParticipation.individual.legitimacyStatusId?.toString() || '',
+                maritalStatusId: fatherParticipation.maritalStatusId?.toString() || '',
+                birthYear: fatherParticipation.individual.birthYear?.toString() || '',
+                birthMonth: fatherParticipation.individual.birthMonth?.toString() || '',
+                birthDay: fatherParticipation.individual.birthDay?.toString() || '',
+                isDeadAtEvent: fatherParticipation.isDeadAtEvent || false,
                 origin: fatherParticipation.originId?.toString() || '',
                 residence: fatherParticipation.residenceId?.toString() || '',
                 deathPlace: fatherParticipation.deathPlaceId?.toString() || '',
@@ -418,6 +440,11 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
                 professionId: motherParticipation.professionId?.toString() || '',
                 professionOriginal: motherParticipation.professionOriginal || '',
                 legitimacyStatusId: motherParticipation.individual.legitimacyStatusId?.toString() || '',
+                maritalStatusId: motherParticipation.maritalStatusId?.toString() || '',
+                birthYear: motherParticipation.individual.birthYear?.toString() || '',
+                birthMonth: motherParticipation.individual.birthMonth?.toString() || '',
+                birthDay: motherParticipation.individual.birthDay?.toString() || '',
+                isDeadAtEvent: motherParticipation.isDeadAtEvent || false,
                 origin: motherParticipation.originId?.toString() || '',
                 residence: motherParticipation.residenceId?.toString() || '',
                 deathPlace: motherParticipation.deathPlaceId?.toString() || '',
@@ -453,6 +480,7 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
                 professionId: fatherParticipation?.professionId?.toString() || '',
                 professionOriginal: fatherParticipation?.professionOriginal || '',
                 legitimacyStatusId: father.legitimacyStatusId?.toString() || '',
+                maritalStatusId: fatherParticipation?.maritalStatusId?.toString() || '',
                 origin: fatherParticipation?.originId?.toString() || '',
                 residence: fatherParticipation?.residenceId?.toString() || '',
                 deathPlace: fatherParticipation?.deathPlaceId?.toString() || '',
@@ -474,6 +502,7 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
                 professionId: motherParticipation?.professionId?.toString() || '',
                 professionOriginal: motherParticipation?.professionOriginal || '',
                 legitimacyStatusId: mother.legitimacyStatusId?.toString() || '',
+                maritalStatusId: motherParticipation?.maritalStatusId?.toString() || '',
                 origin: motherParticipation?.originId?.toString() || '',
                 residence: motherParticipation?.residenceId?.toString() || '',
                 deathPlace: motherParticipation?.deathPlaceId?.toString() || '',
@@ -494,6 +523,11 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
             professionId: primary.professionId?.toString() || '',
             professionOriginal: primary.professionOriginal || '',
             legitimacyStatusId: primary.individual.legitimacyStatusId?.toString() || '',
+            maritalStatusId: primary.maritalStatusId?.toString() || '',
+            birthYear: primary.individual.birthYear?.toString() || '',
+            birthMonth: primary.individual.birthMonth?.toString() || '',
+            birthDay: primary.individual.birthDay?.toString() || '',
+            isDeadAtEvent: primary.isDeadAtEvent || false,
             origin: primary.originId?.toString() || '',
             residence: primary.residenceId?.toString() || '',
             deathPlace: primary.deathPlaceId?.toString() || '',
@@ -514,6 +548,11 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
               professionId: secondary.professionId?.toString() || '',
               professionOriginal: secondary.professionOriginal || '',
               legitimacyStatusId: secondary.individual.legitimacyStatusId?.toString() || '',
+              maritalStatusId: secondary.maritalStatusId?.toString() || '',
+              birthYear: secondary.individual.birthYear?.toString() || '',
+              birthMonth: secondary.individual.birthMonth?.toString() || '',
+              birthDay: secondary.individual.birthDay?.toString() || '',
+              isDeadAtEvent: secondary.isDeadAtEvent || false,
               origin: secondary.originId?.toString() || '',
               residence: secondary.residenceId?.toString() || '',
               deathPlace: secondary.deathPlaceId?.toString() || '',
@@ -542,6 +581,11 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
           professionId: p.professionId?.toString() || '',
           professionOriginal: p.professionOriginal || '',
           legitimacyStatusId: p.individual.legitimacyStatusId?.toString() || '',
+          maritalStatusId: p.maritalStatusId?.toString() || '',
+          birthYear: p.individual.birthYear?.toString() || '',
+          birthMonth: p.individual.birthMonth?.toString() || '',
+          birthDay: p.individual.birthDay?.toString() || '',
+          isDeadAtEvent: p.isDeadAtEvent || false,
           origin: p.originId?.toString() || '',
           residence: p.residenceId?.toString() || '',
           deathPlace: p.deathPlaceId?.toString() || '',
@@ -562,14 +606,15 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
     setIsLoadingMetadata(true);
     const fetchData = async () => {
         try {
-            const [pRes, tRes, profRes, rRes, legRes, kinRes, placesRes] = await Promise.all([
+            const [pRes, tRes, profRes, rRes, legRes, kinRes, placesRes, maritalRes] = await Promise.all([
                 fetch('/api/parishes'),
                 fetch('/api/titles'),
                 fetch('/api/professions'),
                 fetch('/api/participation-roles'),
                 fetch('/api/legitimacy-statuses'),
                 fetch('/api/kinships').catch(() => null),
-                fetch('/api/places')
+                fetch('/api/places'),
+                fetch('/api/marital-statuses')
             ]);
             
             const pData = await pRes.json();
@@ -586,6 +631,9 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
 
             const lData = await legRes.json();
             if(Array.isArray(lData)) setLegitimacyStatuses(lData);
+
+            const mData = await maritalRes.json();
+            if(Array.isArray(mData)) setMaritalStatuses(mData);
             
             if(kinRes && kinRes.ok) {
                 const kData = await kinRes.json();
@@ -692,13 +740,15 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
     setShowTitleModal(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (action: 'stay' | 'new' = 'stay') => {
       if (!eventId || !eventData.parishId) {
-          setError('Por favor selecione a Paróquia.');
+          setErrorMessage('Por favor selecione a Paróquia.');
+          setTimeout(() => setErrorMessage(''), 3000);
           return;
       }
       if (!primarySubject.name) {
-          setError('O interveniente principal deve ter um nome.');
+          setErrorMessage('O interveniente principal deve ter um nome.');
+          setTimeout(() => setErrorMessage(''), 3000);
           return;
       }
 
@@ -709,21 +759,25 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
           const day = parseInt(eventData.day);
           
           if (year < 0 || year > 2100) {
-              setError('Ano deve estar entre 0 e 2100.');
+              setErrorMessage('Ano deve estar entre 0 e 2100.');
+              setTimeout(() => setErrorMessage(''), 3000);
               return;
           }
           if (month < 1 || month > 12) {
-              setError('Mês deve estar entre 1 e 12.');
+              setErrorMessage('Mês deve estar entre 1 e 12.');
+              setTimeout(() => setErrorMessage(''), 3000);
               return;
           }
           if (day < 1 || day > 31) {
-              setError('Dia deve estar entre 1 e 31.');
+              setErrorMessage('Dia deve estar entre 1 e 31.');
+              setTimeout(() => setErrorMessage(''), 3000);
               return;
           }
           
           const date = new Date(year, month - 1, day);
           if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-              setError(`A data ${day}/${month}/${year} não é válida.`);
+              setErrorMessage(`A data ${day}/${month}/${year} não é válida.`);
+              setTimeout(() => setErrorMessage(''), 3000);
               return;
           }
       }
@@ -777,9 +831,19 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
               throw new Error(err.error || 'Erro desconhecido');
           }
           
-          router.push(`/records/${eventId}`);
+          setSuccessMessage('Registo gravado com sucesso!');
+          setTimeout(() => setSuccessMessage(''), 2000);
+          
+          if (action === 'new') {
+              // Ir para novo registo após 500ms
+              setTimeout(() => {
+                  router.push('/records/new');
+              }, 500);
+          }
+          // Se action === 'stay', mantém na página de edição (não faz nada)
       } catch (e) {
-          setError(e instanceof Error ? e.message : 'Erro ao guardar');
+          setErrorMessage(e instanceof Error ? e.message : 'Erro ao guardar');
+          setTimeout(() => setErrorMessage(''), 3000);
       } finally {
           setIsSaving(false);
       }
@@ -1064,11 +1128,18 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
             </div>
             <div className="d-flex gap-3 align-items-center">
               <button 
-                className="btn btn-primary" 
-                onClick={handleSave}
+                className="btn btn-secondary" 
+                onClick={() => handleSave('stay')}
                 disabled={isSaving}
               >
-                {isSaving ? 'A guardar...' : 'Guardar Alterações'}
+                {isSaving ? 'A guardar...' : 'Gravar'}
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => handleSave('new')}
+                disabled={isSaving}
+              >
+                {isSaving ? 'A guardar...' : 'Gravar & Novo'}
               </button>
               <Link href={`/records/${eventId}`} className="btn btn-secondary">
                 Cancelar
@@ -1106,15 +1177,15 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
               </div>
               
               <div className="col-md-2">
-                <label className="form-label">Ano</label>
+                <label className="form-label">Dia</label>
                 <input 
                   type="number" 
                   className="form-control" 
-                  placeholder="Ano"
-                  min="0"
-                  max="2100"
-                  value={eventData.year}
-                  onChange={(e) => handleEventChange('year', e.target.value)}
+                  placeholder="Dia"
+                  min="1"
+                  max="31"
+                  value={eventData.day}
+                  onChange={(e) => handleEventChange('day', e.target.value)}
                 />
               </div>
               
@@ -1132,17 +1203,30 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
               </div>
               
               <div className="col-md-2">
-                <label className="form-label">Dia</label>
+                <label className="form-label">Ano</label>
                 <input 
                   type="number" 
                   className="form-control" 
-                  placeholder="Dia"
-                  min="1"
-                  max="31"
-                  value={eventData.day}
-                  onChange={(e) => handleEventChange('day', e.target.value)}
+                  placeholder="Ano"
+                  min="0"
+                  max="2100"
+                  value={eventData.year}
+                  onChange={(e) => handleEventChange('year', e.target.value)}
                 />
               </div>
+              
+              {/* <div className="col-md-2">
+                <label className="form-label">Mês</label>
+                <input 
+                  type="number" 
+                  className="form-control" 
+                  placeholder="Mês"
+                  min="1"
+                  max="12"
+                  value={eventData.month}
+                  onChange={(e) => handleEventChange('month', e.target.value)}
+                />
+              </div> */}
               
               <div className="col-md-3">
                 <label className="form-label">Paróquia</label>
@@ -1153,6 +1237,47 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
                   placeholder="Selecionar paróquia..."
                 />
               </div>
+              
+              {eventType === 'BAPTISM' && (
+                <>
+                  <div className="col-md-2">
+                    <label className="form-label">Dia Nasc. Batizando</label>
+                    <input 
+                      type="number" 
+                      className="form-control"
+                      placeholder="Dia..."
+                      min="1"
+                      max="31"
+                      value={primarySubject.birthDay || ''}
+                      onChange={(e) => updatePerson('primary', { ...primarySubject, birthDay: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Mês Nasc. Batizando</label>
+                    <input 
+                      type="number" 
+                      className="form-control"
+                      placeholder="Mês..."
+                      min="1"
+                      max="12"
+                      value={primarySubject.birthMonth || ''}
+                      onChange={(e) => updatePerson('primary', { ...primarySubject, birthMonth: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Ano Nasc. Batizando</label>
+                    <input 
+                      type="number" 
+                      className="form-control"
+                      placeholder="Ano..."
+                      min="1500"
+                      max="2100"
+                      value={primarySubject.birthYear || ''}
+                      onChange={(e) => updatePerson('primary', { ...primarySubject, birthYear: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
               
               <div className="col-md-12">
                 <label className="form-label">Fonte Digital (Link)</label>
@@ -1195,6 +1320,7 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
               titles={titles}
               professions={professions}
               legitimacyStatuses={legitimacyStatuses}
+              maritalStatuses={maritalStatuses}
               places={allPlaces}
               parishes={parishes}
               contextParishId={eventData.parishId}
@@ -1216,6 +1342,7 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
                   titles={titles}
                   professions={professions}
                   legitimacyStatuses={legitimacyStatuses}
+                  maritalStatuses={maritalStatuses}
                   places={allPlaces}
                   parishes={parishes}
                   contextParishId={eventData.parishId}
@@ -1287,6 +1414,7 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
                         titles={titles}
                         professions={professions}
                         legitimacyStatuses={legitimacyStatuses}
+                        maritalStatuses={maritalStatuses}
                         places={allPlaces}
                         parishes={parishes}
                         contextParishId={eventData.parishId}
@@ -1306,15 +1434,77 @@ export default function EditRecordPage({ params }: { params: Promise<{ id: strin
         <div className="card mb-4">
           <div className="card-body d-flex gap-2 justify-content-end">
             <button 
-              className="btn btn-primary" 
-              onClick={handleSave}
+              className="btn btn-secondary" 
+              onClick={() => handleSave('stay')}
               disabled={isSaving}
             >
-              {isSaving ? 'A gravar...' : 'Gravar Registo'}
+              {isSaving ? 'A gravar...' : 'Gravar'}
+            </button>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => handleSave('new')}
+              disabled={isSaving}
+            >
+              {isSaving ? 'A gravar...' : 'Gravar & Novo'}
             </button>
           </div>
         </div>
       </div>
+      
+      {/* Toast de Sucesso */}
+      {successMessage && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            backgroundColor: '#d4edda',
+            color: '#155724',
+            padding: '12px 16px',
+            borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            zIndex: 1000,
+            animation: 'slideIn 0.3s ease-out',
+            border: '1px solid #c3e6cb',
+          }}
+        >
+          {successMessage}
+        </div>
+      )}
+      
+      {/* Toast de Erro */}
+      {errorMessage && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            backgroundColor: '#f8d7da',
+            color: '#721c24',
+            padding: '12px 16px',
+            borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            zIndex: 1000,
+            animation: 'slideIn 0.3s ease-out',
+            border: '1px solid #f5c6cb',
+          }}
+        >
+          {errorMessage}
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
       
       {/* Modal para adicionar lugar */}
       {showPlaceModal && (
@@ -1390,13 +1580,14 @@ function PersonCardMinimized({ person, label, onClick, generation }: {
 }
 
 // Person Card Full (expanded view)
-function PersonCard({ person, label, onChange, titles, professions, legitimacyStatuses, places, parishes, contextParishId, onAddPlace, onAddTitle, hideParentsButton = false, generation = 0, expandedPersonIds = new Set(), onToggleExpandedPerson = (id: string) => {}, lineagePath = "1" }: {
+function PersonCard({ person, label, onChange, titles, professions, legitimacyStatuses, maritalStatuses, places, parishes, contextParishId, onAddPlace, onAddTitle, hideParentsButton = false, generation = 0, expandedPersonIds = new Set(), onToggleExpandedPerson = (id: string) => {}, lineagePath = "1" }: {
   person: PersonData;
   label: string;
   onChange: (p: PersonData) => void;
   titles: Title[];
   professions: Profession[];
   legitimacyStatuses: LegitimacyStatus[];
+  maritalStatuses: MaritalStatus[];
   places: Place[];
   parishes: Parish[];
   contextParishId: string;
@@ -1480,7 +1671,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
           </div>
         </div>
         
-        <div className="col-md-6">
+        <div className="col-md-4">
           <label className="form-label">Filiação</label>
           <SearchableSelect
             options={legitimacyStatuses.map(l => ({ id: l.id, name: l.name }))}
@@ -1490,7 +1681,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
           />
         </div>
         
-        <div className="col-md-6">
+        <div className="col-md-4">
           <label className="form-label">Alcunha</label>
           <input 
             type="text" 
@@ -1498,6 +1689,16 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
             placeholder="Alcunha ou apelido..."
             value={person.nickname}
             onChange={(e) => handleChange('nickname', e.target.value)}
+          />
+        </div>
+        
+        <div className="col-md-4">
+          <label className="form-label">Estado Civil</label>
+          <SearchableSelect
+            options={maritalStatuses.map(ms => ({ id: ms.id, name: ms.name }))}
+            value={person.maritalStatusId}
+            onChange={(val) => handleChange('maritalStatusId', val)}
+            placeholder="Selecionar..."
           />
         </div>
         
@@ -1568,6 +1769,20 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
           {person.father ? (
             <div className="person-lineage person-lineage-paternal">
               <div className="person-lineage-label">👨 Linha Paterna</div>
+              <div className="mb-3">
+                <div className="form-check">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id={`father_dead_${person.id}`}
+                    checked={person.father.isDeadAtEvent || false}
+                    onChange={(e) => onChange({ ...person, father: { ...person.father!, isDeadAtEvent: e.target.checked } })}
+                  />
+                  <label className="form-check-label" htmlFor={`father_dead_${person.id}`}>
+                    Falecido à data do evento
+                  </label>
+                </div>
+              </div>
               <PersonCard
                 person={person.father}
                 label={`${person.father.id ? `[${person.father.id}] ` : ''}Pai ${person.name ? `de ${person.name}` : ''}`}
@@ -1575,6 +1790,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
                 titles={titles}
                 professions={professions}
                 legitimacyStatuses={legitimacyStatuses}
+                maritalStatuses={maritalStatuses}
                 places={places}
                 parishes={parishes}
                 contextParishId={contextParishId}
@@ -1589,6 +1805,20 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
           ) : person.mother ? (
             <div className="person-lineage person-lineage-paternal">
               <div className="person-lineage-label">👨 Linha Paterna</div>
+              <div className="mb-3">
+                <div className="form-check">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id={`father_empty_dead_${person.id}`}
+                    checked={false}
+                    onChange={(e) => onChange({ ...person, father: { ...createEmptyPerson('FATHER', `${person.id}_f_empty`), isDeadAtEvent: e.target.checked } })}
+                  />
+                  <label className="form-check-label" htmlFor={`father_empty_dead_${person.id}`}>
+                    Falecido à data do evento
+                  </label>
+                </div>
+              </div>
               <PersonCard
                 person={createEmptyPerson('FATHER', `${person.id}_f_empty`)}
                 label={`Pai ${person.name ? `de ${person.name}` : ''}`}
@@ -1596,6 +1826,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
                 titles={titles}
                 professions={professions}
                 legitimacyStatuses={legitimacyStatuses}
+                maritalStatuses={maritalStatuses}
                 places={places}
                 parishes={parishes}
                 contextParishId={contextParishId}
@@ -1611,6 +1842,20 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
           {person.mother ? (
             <div className="person-lineage person-lineage-maternal">
               <div className="person-lineage-label">👩 Linha Materna</div>
+              <div className="mb-3">
+                <div className="form-check">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id={`mother_dead_${person.id}`}
+                    checked={person.mother.isDeadAtEvent || false}
+                    onChange={(e) => onChange({ ...person, mother: { ...person.mother!, isDeadAtEvent: e.target.checked } })}
+                  />
+                  <label className="form-check-label" htmlFor={`mother_dead_${person.id}`}>
+                    Falecido à data do evento
+                  </label>
+                </div>
+              </div>
               <PersonCard
                 person={person.mother}
                 label={`${person.mother.id ? `[${person.mother.id}] ` : ''}Mãe ${person.name ? `de ${person.name}` : ''}`}
@@ -1618,6 +1863,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
                 titles={titles}
                 professions={professions}
                 legitimacyStatuses={legitimacyStatuses}
+                maritalStatuses={maritalStatuses}
                 places={places}
                 parishes={parishes}
                 contextParishId={contextParishId}
@@ -1632,6 +1878,20 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
           ) : person.father ? (
             <div className="person-lineage person-lineage-maternal">
               <div className="person-lineage-label">👩 Linha Materna</div>
+              <div className="mb-3">
+                <div className="form-check">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id={`mother_empty_dead_${person.id}`}
+                    checked={false}
+                    onChange={(e) => onChange({ ...person, mother: { ...createEmptyPerson('MOTHER', `${person.id}_m_empty`), isDeadAtEvent: e.target.checked } })}
+                  />
+                  <label className="form-check-label" htmlFor={`mother_empty_dead_${person.id}`}>
+                    Falecido à data do evento
+                  </label>
+                </div>
+              </div>
               <PersonCard
                 person={createEmptyPerson('MOTHER', `${person.id}_m_empty`)}
                 label={`Mãe ${person.name ? `de ${person.name}` : ''}`}
@@ -1639,6 +1899,7 @@ function PersonCard({ person, label, onChange, titles, professions, legitimacySt
                 titles={titles}
                 professions={professions}
                 legitimacyStatuses={legitimacyStatuses}
+                maritalStatuses={maritalStatuses}
                 places={places}
                 parishes={parishes}
                 contextParishId={contextParishId}

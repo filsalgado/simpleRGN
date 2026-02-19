@@ -71,6 +71,13 @@ export default function AdminPage() {
       icon: '🎭',
       link: '/admin/participation-roles',
       color: 'secondary'
+    },
+    {
+      title: 'Estados Civis',
+      description: 'Gerir estados civis dos intervenientes',
+      icon: '💍',
+      link: '/admin/marital-statuses',
+      color: 'info'
     }
   ];
 

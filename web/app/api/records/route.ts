@@ -220,7 +220,7 @@ export async function POST(req: Request) {
     const contextParishId = user.currentParishId;
 
     try {
-        await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx) => {
             // 1. Create Event
             const newEvent = await tx.event.create({
                 data: {
@@ -255,6 +255,9 @@ export async function POST(req: Request) {
                         name: person.name,
                         sex: person.sex || sex, // Use explicit sex if provided, else inferred
                         legitimacyStatusId: person.legitimacyStatusId ? parseInt(person.legitimacyStatusId) : null,
+                        birthYear: person.birthYear ? parseInt(person.birthYear) : null,
+                        birthMonth: person.birthMonth ? parseInt(person.birthMonth) : null,
+                        birthDay: person.birthDay ? parseInt(person.birthDay) : null,
                         createdById: userId,
                         updatedById: userId,
                         contextParishId: contextParishId
@@ -276,6 +279,7 @@ export async function POST(req: Request) {
                         originId: person.origin ? parseInt(person.origin) : null,
                         residenceId: person.residence ? parseInt(person.residence) : null,
                         deathPlaceId: person.deathPlace ? parseInt(person.deathPlace) : null,
+                        isDeadAtEvent: person.isDeadAtEvent || false,
                         
                         // Custom Role (from UI) overriding if provided? 
                         // For generic participants, we use the one from UI.
@@ -360,9 +364,10 @@ export async function POST(req: Request) {
                 }
             }
 
+            return newEvent;
         }); // End Transaction
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, id: result.id });
 
     } catch (e: any) {
         console.error("Transaction failed", e);

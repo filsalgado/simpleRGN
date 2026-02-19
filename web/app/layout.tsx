@@ -31,6 +31,14 @@ export default function RootLayout({
               <Link href="/" className="navbar-brand fw-bold text-primary">
                 SimpleRGN
               </Link>
+              <div className="navbar-nav me-auto d-flex gap-2">
+                <Link href="/records/new" className="btn btn-outline-primary btn-sm">
+                  Novo Registo
+                </Link>
+                <Link href="/records" className="btn btn-outline-secondary btn-sm">
+                  Listar Registos
+                </Link>
+              </div>
               <UserMenu />
             </div>
           </nav>

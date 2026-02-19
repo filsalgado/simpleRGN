@@ -59,6 +59,7 @@ async function seedDatabase() {
     await prisma.title.deleteMany({});
     await prisma.kinship.deleteMany({});
     await prisma.participationRole.deleteMany({});
+    await prisma.maritalStatus.deleteMany({});
     
     // Keep User and Parish data (don't delete them)
     // Just clear Parish data if needed
@@ -163,6 +164,28 @@ async function seedDatabase() {
     }
     console.log(`✓ Loaded ${participationRoleData.length} participation roles`);
 
+    // Load MaritalStatus
+    console.log('Loading Marital Statuses...');
+    const maritalStatusData = parseCSV(path.join(csvDir, 'MaritalStatus.csv'));
+    for (const row of maritalStatusData) {
+      const id = parseInt(row.id);
+      const name = row.name?.trim() || '';
+      if (name) {
+        try {
+          await prisma.maritalStatus.create({
+            data: {
+              id,
+              name,
+              isOriginal: true
+            }
+          });
+        } catch (e) {
+          // Skip duplicates
+        }
+      }
+    }
+    console.log(`✓ Loaded ${maritalStatusData.length} marital statuses`);
+
     // Load Parish
     console.log('Loading Parishes...');
     const parishData = parseCSV(path.join(csvDir, 'Parish.csv'));
@@ -230,6 +253,7 @@ async function seedDatabase() {
     console.log(`- Professions: ${professionData.length}`);
     console.log(`- Titles: ${titleData.length}`);
     console.log(`- ParticipationRoles: ${participationRoleData.length}`);
+    console.log(`- Marital Statuses: ${maritalStatusData.length}`);
     console.log(`- Parishes: ${parishData.length}`);
     console.log(`- Places: ${placeData.length - placesSkipped}`);
 
