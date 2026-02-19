@@ -193,14 +193,18 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
+    console.log('[DEBUG POST] Session user email:', session?.user?.email);
+    
     if (!session || !session.user || !session.user.email) {
+        console.error('[ERROR POST] Unauthorized - no session');
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     let payload;
     try {
         payload = await req.json();
-    } catch {
+    } catch (e) {
+        console.error('[ERROR POST] Invalid JSON:', e);
         return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
     
@@ -212,7 +216,10 @@ export async function POST(req: Request) {
         select: { id: true, currentParishId: true }
     });
 
+    console.log('[DEBUG POST] User found:', user?.id, 'Parish:', user?.currentParishId);
+
     if (!user) {
+        console.error('[ERROR POST] User not found:', session.user.email);
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 

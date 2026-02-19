@@ -2,6 +2,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// --- Helper: Fetch com timeout ---
+const fetchWithTimeout = (url: string, timeout = 10000): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  return fetch(url, { signal: controller.signal })
+    .finally(() => clearTimeout(timeoutId))
+    .catch(err => {
+      console.error(`[TIMEOUT] Fetch para ${url} expirou após ${timeout}ms`);
+      throw err;
+    });
+};
+
 // --- Types ---
 type EventType = 'BAPTISM' | 'MARRIAGE' | 'DEATH';
 
@@ -381,17 +394,20 @@ export default function NewRecordPageBootstrap() {
     const fetchData = async () => {
         try {
             const [pRes, tRes, profRes, rRes, ctxRes, legRes, placesRes, maritalRes] = await Promise.all([
-                fetch('/api/parishes'),
-                fetch('/api/titles'),
-                fetch('/api/professions'),
-                fetch('/api/participation-roles'),
-                fetch('/api/users/me/context/current'),
-                fetch('/api/legitimacy-statuses'),
-                fetch('/api/places'),
-                fetch('/api/marital-statuses')
-            ]);
+                fetchWithTimeout('/api/parishes', 10000),
+                fetchWithTimeout('/api/titles', 10000),
+                fetchWithTimeout('/api/professions', 10000),
+                fetchWithTimeout('/api/participation-roles', 10000),
+                fetchWithTimeout('/api/users/me/context/current', 10000),
+                fetchWithTimeout('/api/legitimacy-statuses', 10000),
+                fetchWithTimeout('/api/places', 10000),
+                fetchWithTimeout('/api/marital-statuses', 10000)
+            ]).catch(err => {
+                console.error('[ERROR] Promise.all timeout:', err);
+                throw new Error('Alguns dados demoraram muito a carregar');
+            });
             
-            const kinRes = await fetch('/api/kinships').catch(() => null);
+            const kinRes = await fetchWithTimeout('/api/kinships', 10000).catch(() => null);
 
             const pData = await pRes.json();
             const ctxData = await ctxRes.json();
@@ -435,7 +451,9 @@ export default function NewRecordPageBootstrap() {
             if(Array.isArray(placesData)) setAllPlaces(placesData);
 
         } catch (error) {
-            console.error("Error loading metadata:", error);
+            console.error("[ERROR] Error loading metadata:", error);
+            // Mostrar erro ao utilizador, mas não bloquear
+            alert('Erro ao carregar dados. A página pode estar incompleta.');
         } finally {
             setIsLoadingMetadata(false);
         }
